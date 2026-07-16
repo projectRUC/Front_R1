@@ -150,60 +150,53 @@ graph TD
 
 ## Estructura de carpetas
 
-```
+```text
 src/
 ├── app/
-│   ├── App.tsx
-│   ├── routes.tsx
-│   ├── store.ts
-│   ├── providers.tsx
-│   └── theme.ts
+│   ├── (auth)/
+│   │   ├── layout.tsx
+│   │   └── login/page.tsx
+│   └── (dashboard)/
+│       ├── layout.tsx
+│       ├── kanban/page.tsx
+│       ├── panel/page.tsx
+│       └── reportes/page.tsx
 ├── assets/
 ├── components/
 │   ├── Button/
-│   ├── Modal/
-│   ├── Table/
 │   ├── Card/
+│   ├── Charts/
+│   ├── ConfirmDialog/
 │   ├── Input/
+│   ├── Loader/
+│   ├── Modal/
 │   ├── Navbar/
 │   ├── Sidebar/
-│   ├── Loader/
-│   ├── ConfirmDialog/
-│   └── Charts/
+│   └── Table/
+├── context/
+│   ├── providers.tsx
+│   └── store.ts
 ├── hooks/
-├── layouts/
-│   ├── AuthLayout.tsx
-│   └── DashboardLayout.tsx
+├── modules/
+│   ├── alertas/
+│   ├── auth/
+│   ├── daily/
+│   ├── dashboard/
+│   ├── designSprint/
+│   ├── equipos/
+│   ├── kanban/
+│   ├── proyectos/
+│   ├── reportes/
+│   └── usuarios/
 ├── services/
 │   ├── api.ts
 │   ├── auth.service.ts
-│   ├── proyecto.service.ts
-│   ├── sprint.service.ts
 │   ├── kanban.service.ts
-│   └── reporte.service.ts
-├── utils/
+│   ├── proyecto.service.ts
+│   ├── reporte.service.ts
+│   └── sprint.service.ts
 ├── types/
-├── context/
-├── modules/
-│   ├── auth/
-│   ├── dashboard/
-│   ├── metodologias/
-│   ├── proyectos/
-│   ├── equipos/
-│   ├── designSprint/
-│   ├── planeacion/
-│   ├── sprints/
-│   ├── tareas/
-│   ├── kanban/
-│   ├── evidencias/
-│   ├── daily/
-│   ├── retroalimentacion/
-│   ├── alertas/
-│   ├── reportes/
-│   ├── profesor/
-│   ├── alumno/
-│   └── admin/
-└── main.tsx
+└── utils/
 ```
 
 ## Módulos funcionales
