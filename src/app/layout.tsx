@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,39 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              function checkBFCache() {
+                // Forzar recarga si se detecta estado desconectado navegando en caché
+                if (!document.cookie.includes('is_logged_in=')) {
+                   // Solo redirigir si no estamos ya en rutas públicas como /login o /register
+                   if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+                     window.location.replace('/login');
+                   }
+                }
+              }
+
+              window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                  window.location.reload();
+                }
+              });
+
+              window.addEventListener('popstate', checkBFCache);
+              
+              // Pequeño check adicional al enfocar la pestaña
+              window.addEventListener('focus', checkBFCache);
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }
