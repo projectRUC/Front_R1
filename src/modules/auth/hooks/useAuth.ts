@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,18 +11,18 @@ export const useAuth = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
-        body: JSON.stringify({ correo, password }),
+        credentials: "include",
+        body: JSON.stringify({ correo: correo.trim().toLowerCase(), password }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        let errorMsg = data.message || 'Error al iniciar sesión';
+        let errorMsg = data.message || "Error al iniciar sesión";
         if (Array.isArray(errorMsg)) {
           errorMsg = errorMsg[0];
         }
@@ -30,11 +31,12 @@ export const useAuth = () => {
 
       // La cookie HttpOnly ya fue establecida por el backend
       // Establecemos una cookie de bandera (flag) que JS SÍ pueda leer para protección del cliente
-      document.cookie = 'is_logged_in=true; path=/; max-age=28800; samesite=lax';
-      
-      router.push('/dashboard');
+      document.cookie =
+        "is_logged_in=true; path=/; max-age=28800; samesite=lax";
+
+      router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || 'Ocurrió un error inesperado');
+      setError(err.message || "Ocurrió un error inesperado al iniciar sesión.");
     } finally {
       setIsLoading(false);
     }
@@ -44,26 +46,32 @@ export const useAuth = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:3000/auth/register', {
-        method: 'POST',
+      const payload = {
+        ...userData,
+        ...(userData.correo && {
+          correo: userData.correo.trim().toLowerCase(),
+        }),
+      };
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        let errorMsg = data.message || 'Error al registrarse';
+        let errorMsg = data.message || "Error al registrarse";
         if (Array.isArray(errorMsg)) {
           errorMsg = errorMsg[0];
         }
         throw new Error(errorMsg);
       }
 
-      router.push('/login');
+      router.push("/login");
     } catch (err: any) {
-      setError(err.message || 'Ocurrió un error inesperado');
+      setError(err.message || "Ocurrió un error inesperado al registrarse.");
     } finally {
       setIsLoading(false);
     }
@@ -71,27 +79,43 @@ export const useAuth = () => {
 
   const logout = async () => {
     setIsLoading(true);
+    
+    // 1. SIEMPRE primero borramos la cookie local del frontend (Next.js) en su propio bloque aislado.
+    // Esto garantiza que la sesión se cierre en el navegador incluso si el backend NestJS está apagado o falla.
     try {
-      // 1. Cerramos sesión en el backend (NestJS)
-      await fetch('http://localhost:3000/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      
-      // 2. Cerramos sesión en el frontend (Next.js) para asegurar que la cookie se borre de este lado
-      await fetch('/api/auth/logout', {
-        method: 'POST',
+      await fetch("/api/auth/logout", {
+        method: "POST",
       });
     } catch (err) {
-      console.error('Error cerrando sesión:', err);
-    } finally {
-      // Limpiamos la bandera pública
-      document.cookie = 'is_logged_in=; path=/; max-age=0; samesite=lax';
-      setIsLoading(false);
-      // Forzamos un reemplace en la historia para no dejar rastro
-      window.location.replace('/login');
+      console.warn("Advertencia al limpiar cookies en ruta local de Next.js:", err);
     }
+
+    // 2. Notificamos al backend NestJS para limpiar la sesión en servidor
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.warn("Backend no disponible para notificar logout (continuando cierre local):", err);
+    }
+
+    // 3. Limpiamos exhaustivamente cualquier cookie desde el cliente JS combinando directivas
+    document.cookie = "is_logged_in=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
+    document.cookie = "access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
+    document.cookie = "access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict";
+
+    setIsLoading(false);
+    
+    // 4. Redireccionamos directamente al login reemplazando el historial para no dejar ciclos de retroceso
+    window.location.replace("/login");
   };
 
-  return { login, register: registerUser, logout, isLoading, error };
+  return {
+    login,
+    register: registerUser,
+    logout,
+    isLoading,
+    error,
+  };
 };

@@ -1,1 +1,1 @@
-// TODO: Implement
+export const kanbanService = {};
