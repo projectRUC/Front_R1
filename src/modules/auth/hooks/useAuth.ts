@@ -90,14 +90,14 @@ export const useAuth = () => {
       console.warn("Advertencia al limpiar cookies en ruta local de Next.js:", err);
     }
 
-    // 2. Notificamos al backend NestJS para limpiar la sesión en servidor
+    // 2. Notificamos al backend NestJS para limpiar la sesión en servidor (silencioso en fallo de red/servidor apagado)
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
-    } catch (err) {
-      console.warn("Backend no disponible para notificar logout (continuando cierre local):", err);
+    } catch {
+      // Si el backend no está corriendo en localhost:4000 o se está reiniciando, el cierre de sesión local de Next.js procede normalmente de forma silenciosa.
     }
 
     // 3. Limpiamos exhaustivamente cualquier cookie desde el cliente JS combinando directivas
