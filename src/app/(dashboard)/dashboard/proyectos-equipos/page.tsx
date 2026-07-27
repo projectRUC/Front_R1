@@ -172,7 +172,14 @@ export default function ProyectosEquiposPage() {
                 <motion.div
                   key={`${proy.id}-${i}`}
                   whileHover={{ scale: 1.02, translateY: -3 }}
-                  className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col justify-between cursor-pointer"
+                  onClick={() => {
+                    if (proy.equipoId) {
+                      router.push(`/dashboard/proyecto?proyectoId=${proy.id}&equipoId=${proy.equipoId}`);
+                    } else {
+                      alert('Falta asociar este proyecto a un equipo con identificador válido en el servidor.');
+                    }
+                  }}
+                  className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all flex flex-col justify-between cursor-pointer group"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -197,15 +204,21 @@ export default function ProyectosEquiposPage() {
                     </div>
                   </div>
 
-                  {/* Fechas */}
-                  <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Inicio</span>
-                      <span className="font-bold text-gray-700 dark:text-zinc-300">{formatDate(proy.fechaInicio)}</span>
+                  {/* Fechas y Acción de Salida */}
+                  <div>
+                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Inicio</span>
+                        <span className="font-bold text-gray-700 dark:text-zinc-300">{formatDate(proy.fechaInicio)}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Fin</span>
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{formatDate(proy.fechaFin)}</span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Fin</span>
-                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{formatDate(proy.fechaFin)}</span>
+                    <div className="mt-4 py-2.5 px-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-600 transition-all flex items-center justify-between text-xs font-black shadow-2xs">
+                      <span>Ver Portal, Kanban & Tareas</span>
+                      <span>➔</span>
                     </div>
                   </div>
                 </motion.div>
@@ -286,6 +299,18 @@ export default function ProyectosEquiposPage() {
                         </div>
                       ))}
                     </div>
+
+                    {eq.proyectoId && (
+                      <div className="pt-4 mt-4 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
+                        <button
+                          onClick={() => router.push(`/dashboard/proyecto?proyectoId=${eq.proyectoId}&equipoId=${eq.id}`)}
+                          className="px-5 py-2.5 bg-gradient-to-tr from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black rounded-2xl transition-all flex items-center gap-2 shadow-md"
+                        >
+                          <span>🚀 Ir a Portal del Proyecto & Kanban</span>
+                          <span>➔</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

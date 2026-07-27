@@ -2,10 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { dashboardService, ProyectoCard } from '@/services/dashboard.service';
 import { Loader } from '@/components/Loader';
 
 export default function DocenteProyectosPage() {
+  const router = useRouter();
   const [proyectos, setProyectos] = useState<ProyectoCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +111,14 @@ export default function DocenteProyectosPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25, delay: idx * 0.05 }}
               whileHover={{ scale: 1.02, translateY: -4 }}
-              className="group rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md hover:shadow-xl hover:border-blue-500/50 transition-all flex flex-col justify-between"
+              onClick={() => {
+                if (proy.equipoId) {
+                  router.push(`/dashboard/proyecto?proyectoId=${proy.id}&equipoId=${proy.equipoId}`);
+                } else {
+                  alert('Este proyecto no tiene un equipo vinculado en este momento.');
+                }
+              }}
+              className="group rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md hover:shadow-xl hover:border-blue-500/50 transition-all flex flex-col justify-between cursor-pointer"
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-4">
@@ -139,15 +148,21 @@ export default function DocenteProyectosPage() {
                 </div>
               </div>
 
-              {/* Fechas */}
-              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px] block">Inicio</span>
-                  <span className="font-extrabold text-gray-700 dark:text-zinc-300">{formatDate(proy.fechaInicio)}</span>
+              {/* Fechas y Salida */}
+              <div>
+                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px] block">Inicio</span>
+                    <span className="font-extrabold text-gray-700 dark:text-zinc-300">{formatDate(proy.fechaInicio)}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px] block">Cierre</span>
+                    <span className="font-extrabold text-blue-600 dark:text-blue-400">{formatDate(proy.fechaFin)}</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-[10px] block">Cierre</span>
-                  <span className="font-extrabold text-blue-600 dark:text-blue-400">{formatDate(proy.fechaFin)}</span>
+                <div className="mt-4 py-2 px-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-blue-600 transition-all flex items-center justify-between text-xs font-black">
+                  <span>Inspeccionar Portal & Kanban (Solo Lectura) 👁</span>
+                  <span>➔</span>
                 </div>
               </div>
             </motion.div>

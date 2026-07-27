@@ -10,6 +10,7 @@ export interface UserProfile {
 
 export interface ProyectoCard {
   id: number | string;
+  equipoId?: number;
   nombreProyecto: string;
   nombreEquipo: string;
   fechaInicio?: string | null;
@@ -25,6 +26,7 @@ export interface MiembroEquipo {
 
 export interface EquipoCard {
   id: number;
+  proyectoId?: number | null;
   nombreEquipo: string;
   nombreProyecto: string;
   grupo?: string;

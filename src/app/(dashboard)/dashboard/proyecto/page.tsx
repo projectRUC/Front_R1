@@ -10,11 +10,11 @@ import { Loader } from '@/components/Loader';
 type TabType = 'info' | 'miembros' | 'design_sprint' | 'actividades' | 'kanban';
 
 const KANBAN_COLUMNS = [
-  { id: 'Backlog', label: 'Backlog', icon: '📥', headerClass: 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
-  { id: 'sin empezar', label: 'Sin Empezar', icon: '⭕', headerClass: 'bg-cyan-100/70 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-300 dark:border-cyan-800' },
-  { id: 'En proceso', label: 'En Proceso', icon: '⚡', headerClass: 'bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800' },
-  { id: 'Prueba', label: 'Prueba / QA', icon: '🧪', headerClass: 'bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800' },
-  { id: 'Terminado', label: 'Terminado', icon: '✅', headerClass: 'bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800' },
+  { id: 'Backlog', label: 'Backlog', icon: '', headerClass: 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
+  { id: 'sin empezar', label: 'Sin Empezar', icon: '', headerClass: 'bg-cyan-100/70 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border-cyan-300 dark:border-cyan-800' },
+  { id: 'En proceso', label: 'En Proceso', icon: '', headerClass: 'bg-amber-100/70 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800' },
+  { id: 'Prueba', label: 'Prueba / QA', icon: '', headerClass: 'bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800' },
+  { id: 'Terminado', label: 'Terminado', icon: '', headerClass: 'bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800' },
 ];
 
 const getNormalizedStatus = (status?: string | null) => {
@@ -395,41 +395,36 @@ function ProyectoDetalleContent() {
           <div className="flex flex-wrap p-1.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 h-fit self-start md:self-end gap-1">
             <button
               onClick={() => setActiveTab('info')}
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                activeTab === 'info' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
-              }`}
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${activeTab === 'info' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
+                }`}
             >
               Información
             </button>
             <button
               onClick={() => setActiveTab('miembros')}
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
-                activeTab === 'miembros' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
-              }`}
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${activeTab === 'miembros' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
+                }`}
             >
               Miembros ({equipo.miembros.length})
             </button>
             <button
               onClick={() => setActiveTab('design_sprint')}
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                activeTab === 'design_sprint' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
-              }`}
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${activeTab === 'design_sprint' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
+                }`}
             >
               Design Sprint
             </button>
             <button
               onClick={() => setActiveTab('actividades')}
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${
-                activeTab === 'actividades' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
-              }`}
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${activeTab === 'actividades' ? 'bg-white text-indigo-950 shadow-md' : 'text-gray-200 hover:text-white'
+                }`}
             >
               Actividades ({actividades.length})
             </button>
             <button
               onClick={() => setActiveTab('kanban')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
-                activeTab === 'kanban' ? 'bg-gradient-to-tr from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/30' : 'text-cyan-300 hover:text-white bg-cyan-500/10'
-              }`}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${activeTab === 'kanban' ? 'bg-gradient-to-tr from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/30' : 'text-cyan-300 hover:text-white bg-cyan-500/10'
+                }`}
             >
               <span>📊</span> Tablero Kanban
             </button>
@@ -762,9 +757,8 @@ function ProyectoDetalleContent() {
                   <motion.div
                     key={m.usuId}
                     whileHover={{ scale: 1.015, y: -2 }}
-                    className={`p-6 rounded-3xl bg-white dark:bg-zinc-900 border transition-all flex flex-col justify-between space-y-5 relative overflow-hidden shadow-md ${
-                      m.esCreador ? 'border-purple-300 dark:border-purple-800 shadow-purple-500/5' : 'border-gray-200/80 dark:border-zinc-800'
-                    }`}
+                    className={`p-6 rounded-3xl bg-white dark:bg-zinc-900 border transition-all flex flex-col justify-between space-y-5 relative overflow-hidden shadow-md ${m.esCreador ? 'border-purple-300 dark:border-purple-800 shadow-purple-500/5' : 'border-gray-200/80 dark:border-zinc-800'
+                      }`}
                   >
                     {m.esCreador && (
                       <div className="absolute -right-10 -top-10 w-28 h-28 rounded-full bg-purple-500/10 blur-xl pointer-events-none" />
@@ -995,7 +989,7 @@ function ProyectoDetalleContent() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
-                  {canEdit ? '💡 Arrastra las tarjetas entre columnas o utiliza los selectores para actualizar las etapas.' : '👁 Observa el estado del flujo del trabajo del equipo de forma sincronizada.'}
+                  {canEdit ? 'Arrastra las tarjetas entre columnas o utiliza los selectores para actualizar las etapas.' : '👁 Observa el estado del flujo del trabajo del equipo de forma sincronizada.'}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -1003,7 +997,7 @@ function ProyectoDetalleContent() {
                   onClick={() => setActiveTab('actividades')}
                   className="px-4 py-2.5 bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors"
                 >
-                  📋 Ver en Tarjetas Clásicas
+                  Ver en Tarjetas Clásicas
                 </button>
                 {canEdit && (
                   <button
@@ -1057,9 +1051,8 @@ function ProyectoDetalleContent() {
                               key={act.id}
                               draggable={canEdit && !isUpdating}
                               onDragStart={() => setDraggedActId(act.id)}
-                              className={`p-4 rounded-2xl bg-white dark:bg-zinc-800/90 border border-gray-200 dark:border-zinc-700/80 shadow-sm transition-all space-y-3 ${
-                                canEdit ? 'cursor-grab active:cursor-grabbing hover:shadow-md hover:border-purple-400 dark:hover:border-purple-600' : ''
-                              } ${isUpdating ? 'opacity-50 animate-pulse pointer-events-none' : ''}`}
+                              className={`p-4 rounded-2xl bg-white dark:bg-zinc-800/90 border border-gray-200 dark:border-zinc-700/80 shadow-sm transition-all space-y-3 ${canEdit ? 'cursor-grab active:cursor-grabbing hover:shadow-md hover:border-purple-400 dark:hover:border-purple-600' : ''
+                                } ${isUpdating ? 'opacity-50 animate-pulse pointer-events-none' : ''}`}
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <h4 className="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white leading-tight">
@@ -1300,7 +1293,7 @@ function ProyectoDetalleContent() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                  📝
+
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-gray-900 dark:text-white">Nueva Actividad</h3>
