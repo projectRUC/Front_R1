@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { dashboardService, DetalleProyectoEquipoResponse, ActividadProyectoItem } from '@/services/dashboard.service';
 import { useUser } from '@/context/UserContext';
 import { Loader } from '@/components/Loader';
+import { HerramientasEvaluadasTable } from '@/app/herramientas/components/HerramientasEvaluadasTable';
+import { DocenteFeedbackBox } from '@/app/herramientas/components/DocenteFeedbackBox';
 
-type TabType = 'info' | 'miembros' | 'design_sprint' | 'actividades' | 'kanban';
+type TabType = 'info' | 'miembros' | 'design_sprint' | 'actividades' | 'kanban' | 'herramientas';
 
 const KANBAN_COLUMNS = [
   { id: 'Backlog', label: 'Backlog', icon: '', headerClass: 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
@@ -428,11 +430,18 @@ function ProyectoDetalleContent() {
             >
               <span>📊</span> Tablero Kanban
             </button>
+            <button
+              onClick={() => setActiveTab('herramientas')}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${activeTab === 'herramientas' ? 'bg-white text-gray-900 shadow-md' : 'text-gray-300 hover:text-white'
+                }`}
+            >
+              🛠 Herramientas
+            </button>
           </div>
         </div>
       </motion.div>
 
-      {/* --- PESTAÑA 1: INFORMACIÓN Y PERÍODOS --- */}
+      {/* --- PESTAÑAS (con AnimatePresence) --- */}
       <AnimatePresence mode="wait">
         {activeTab === 'info' && (
           <motion.div
@@ -718,7 +727,6 @@ function ProyectoDetalleContent() {
           </motion.div>
         )}
 
-        {/* --- PESTAÑA 2: MIEMBROS Y EQUIPO --- */}
         {activeTab === 'miembros' && (
           <motion.div
             key="tab-miembros"
@@ -853,7 +861,6 @@ function ProyectoDetalleContent() {
           </motion.div>
         )}
 
-        {/* --- PESTAÑA 3: DESIGN SPRINT --- */}
         {activeTab === 'design_sprint' && (
           <motion.div
             key="tab-design-sprint"
@@ -879,7 +886,6 @@ function ProyectoDetalleContent() {
           </motion.div>
         )}
 
-        {/* --- PESTAÑA 4: ACTIVIDADES (VISTA LISTA) --- */}
         {activeTab === 'actividades' && (
           <motion.div
             key="tab-actividades"
@@ -971,7 +977,6 @@ function ProyectoDetalleContent() {
           </motion.div>
         )}
 
-        {/* --- PESTAÑA 5: TABLERO KANBAN (DRAG & DROP / INTERACTIVO) --- */}
         {activeTab === 'kanban' && (
           <motion.div
             key="tab-kanban"
@@ -1101,6 +1106,21 @@ function ProyectoDetalleContent() {
                 })}
               </div>
             )}
+          </motion.div>
+        )}
+
+        {/* --- PESTAÑA HERRAMIENTAS (movida dentro de AnimatePresence) --- */}
+        {activeTab === 'herramientas' && (
+          <motion.div
+            key="tab-herramientas"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-8"
+          >
+            <HerramientasEvaluadasTable proyectoId={proyecto.id} userRol={user?.rol || ''} />
+            <DocenteFeedbackBox designSprintId={proyecto.id} userRol={user?.rol || ''} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -1293,7 +1313,7 @@ function ProyectoDetalleContent() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-
+                  +
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-gray-900 dark:text-white">Nueva Actividad</h3>
