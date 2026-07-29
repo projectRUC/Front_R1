@@ -8,6 +8,7 @@ import { useUser } from '@/context/UserContext';
 import { Loader } from '@/components/Loader';
 import { HerramientasEvaluadasTable } from '@/app/herramientas/components/HerramientasEvaluadasTable';
 import { DocenteFeedbackBox } from '@/app/herramientas/components/DocenteFeedbackBox';
+import DesignSprintGate from '@/app/designSprint/DesignSprintGate';
 
 type TabType = 'info' | 'miembros' | 'design_sprint' | 'actividades' | 'kanban' | 'herramientas';
 
@@ -861,30 +862,13 @@ function ProyectoDetalleContent() {
           </motion.div>
         )}
 
-        {activeTab === 'design_sprint' && (
-          <motion.div
-            key="tab-design-sprint"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className="rounded-3xl p-12 bg-gradient-to-br from-indigo-950 via-zinc-900 to-purple-950 text-center border border-white/10 shadow-2xl relative overflow-hidden my-6"
-          >
-            <div className="max-w-2xl mx-auto space-y-6 relative z-10">
-              <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center text-4xl mx-auto border border-white/20 shadow-lg">
-                🎨
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">Módulo de Design Sprint en Preparación</h2>
-              <p className="text-sm sm:text-base text-gray-300 leading-relaxed font-medium">
-                Esta sección concentrará próximamente las etapas metodológicas, lienzos dinámicos (Map, Sketch, Decide, Prototype y Test) y evidencias digitales asociadas a tu proyecto.
-              </p>
-              <div className="pt-2">
-                <span className="px-5 py-2 rounded-full text-xs font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                  Próximamente disponible en el sistema PAEC
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        )}
+{activeTab === 'design_sprint' && (
+  <DesignSprintGate
+    eqId={Number(equipoId)}
+    proyectoId={Number(proyecto.id)}
+    usuId={user?.id ?? 0}
+  />
+)}
 
         {activeTab === 'actividades' && (
           <motion.div

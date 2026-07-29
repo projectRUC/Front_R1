@@ -1,22 +1,16 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { fetchApi } from "@/services/api";
+import { FileEntity } from "@/types/designSprint";
 
-export interface UploadedFile {
-  _id: string;
-  originalName: string;
-  url: string;
-  mimeType: string;
-  size: number;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-export async function uploadFile(file: File, category = 'evidencias'): Promise<UploadedFile> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('category', category);
+export const FilesService = {
+  listar: () => fetchApi<FileEntity[]>("/files"),
 
-  const response = await fetch(`${API_BASE_URL}/files/upload`, { method: 'POST', body: formData });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Error al subir archivo');
-  }
-  return response.json();
-}
+  obtener: (id: string) => fetchApi<FileEntity>(`/files/${id}`),
+
+  eliminar: (id: string) =>
+    fetchApi<{ message: string }>(`/files/${id}`, { method: "DELETE" }),
+
+  // Arma la URL pública completa a partir del "url" relativo que guarda FileEntity
+  urlPublica: (archivo: FileEntity) => `${API_BASE_URL}${archivo.url}`,
+};

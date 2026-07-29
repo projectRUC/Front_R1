@@ -1,71 +1,61 @@
-export enum FaseDesignSprint {
-  MAPEAR = 'mapear',
-  BOCETAR = 'bocetar',
-  DECIDIR = 'decidir',
-  PROTOTIPAR = 'prototipar',
-}
-
-export const FASE_INFO: Record<FaseDesignSprint, { title: string; day: number; dayName: string; description: string }> = {
-  [FaseDesignSprint.MAPEAR]: { title: 'Mapear', day: 1, dayName: 'Lunes', description: 'Definir el problema y mapear el desafío' },
-  [FaseDesignSprint.BOCETAR]: { title: 'Bocetar', day: 2, dayName: 'Martes', description: 'Generar ideas y bocetar soluciones' },
-  [FaseDesignSprint.DECIDIR]: { title: 'Decidir', day: 3, dayName: 'Miércoles', description: 'Seleccionar las mejores ideas' },
-  [FaseDesignSprint.PROTOTIPAR]: { title: 'Prototipar', day: 4, dayName: 'Jueves', description: 'Crear prototipo para validar' },
-};
-
-export interface EvidenceFile {
-  id: string;
-  url: string;
+export interface FileEntity {
+  _id?: string;
   originalName: string;
+  fileName: string;
+  path: string;
+  url: string;
   mimeType: string;
   size: number;
+  extension: string;
+  uploadedBy?: string | null;
+  category: string;
 }
 
-export interface CreateEvidenceDTO {
-  equipoId: number;
-  proyectoId: string;
-  fase: FaseDesignSprint;
-  archivosUrls?: string[];
-  comentarios?: string;
+export interface Comentario {
+  usu_id?: number;
+  texto: string;
 }
 
-export interface DesignSprintEvidence {
+export interface Mapeo {
+  proyecto_problema: string;
+  proyecto_objective: string;
+  enfoque: string;
+  archivos: FileEntity[];
+  comentarios: Comentario[];
+}
+
+export interface Puntuacion {
+  usu_id: number;
+  valor: number;
+  comentario?: Comentario;
+}
+
+export interface Boceto {
   _id: string;
-  equipoId: number;
-  proyectoId: string;
-  fase: FaseDesignSprint;
-  fechaRegistro: string;
-  comentarios: string;
-  created_at: string;
-  archivosUrls: string[];
+  propuesta: string;
+  usu_id: number;
+  status: string;
+  archivos: FileEntity[];
+  puntuaciones: Puntuacion[];
+  comentarios: Comentario[];
+  created_at?: string;
 }
 
-export interface AvanceFase {
-  fase: FaseDesignSprint;
-  dia: string;
-  iniciado: boolean;
-  fechaRegistro: string | null;
-  comentarios: string | null;
-  cantidadArchivos: number;
+export interface Prototipo {
+  nombre_prototipo: string;
+  descripcion: string;
+  archivos: FileEntity[];
+  comentarios: Comentario[];
 }
 
-export type AvanceDesignSprint = AvanceFase[];
-
-export interface PhaseUIState {
-  fase: FaseDesignSprint;
-  status: 'completed' | 'pending' | 'blocked';
-  hasEvidence: boolean;
-}
-
-export interface Evidence {
-  id: string;
-  phase: string;
-  imageBase64: string;
-  description?: string;
-  createdAt: string;
-}
-
-export interface ApiErrorResponse {
-  message: string;
-  error: string;
-  statusCode: number;
+export interface SprintDesign {
+  _id: string;
+  eq_id: number;
+  proyecto_id: string;
+  status: string;
+  mapeo?: Mapeo;
+  bocetos: Boceto[];
+  prototipo?: Prototipo;
+  entrevistas: any[];
+  comentarios_generales: Comentario[];
 }
