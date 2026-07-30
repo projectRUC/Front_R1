@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Control de Proyectos",
-  description: "Plataforma de gestión de proyectos web",
+  title: "Sistema PAEC",
+  description: "Gestión Escolar y de Proyectos",
   manifest: "/manifest.json", //Para leer el manifiesto de la PWA
 };
 
@@ -26,17 +27,20 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <script
+      <body className="min-h-full flex flex-col">
+        <Providers>
+          {children}
+        </Providers>
+        <Script
+          id="bfcache-checker"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               function checkBFCache() {
-                // Forzar recarga si se detecta estado desconectado navegando en caché
                 if (!document.cookie.includes('is_logged_in=')) {
-                   // Solo redirigir si no estamos ya en rutas públicas como /login o /register
                    if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
                      window.location.replace('/login');
                    }
@@ -50,18 +54,12 @@ export default function RootLayout({
               });
 
               window.addEventListener('popstate', checkBFCache);
-              
-              // Pequeño check adicional al enfocar la pestaña
               window.addEventListener('focus', checkBFCache);
             `,
           }}
         />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <Providers>
-          {children}
-        </Providers>
       </body>
     </html>
   );
 }
+

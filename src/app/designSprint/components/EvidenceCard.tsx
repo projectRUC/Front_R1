@@ -1,62 +1,83 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Evidence } from '@/types/designSprint';
+import { FileEntity } from "@/types/designSprint";
+import { FilesService } from "../services/filesApi";
+
 interface EvidenceCardProps {
-  evidence: Evidence;
-  onDelete?: (id: string) => void;
+  titulo: string;
+  archivosGuardados: FileEntity[];
+  previasLocales?: string[];
+  onRemoveLocal?: (index: number) => void; // 👈 Callback para eliminar por índice
 }
 
-export const EvidenceCard: React.FC<EvidenceCardProps> = ({ evidence, onDelete }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-MX', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
+export function EvidenceCard({
+  titulo,
+  archivosGuardados,
+  previasLocales = [],
+  onRemoveLocal,
+}: EvidenceCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-shadow hover:shadow-lg">
-      <div className="relative">
-        <img
-          src={evidence.imageBase64}
-          alt={`Evidencia fase ${evidence.phase}`}
-          className="w-full h-48 object-cover"
-          loading="lazy"
-        />
-        {onDelete && (
-          <button
-            onClick={() => onDelete(evidence.id)}
-            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg"
-            title="Eliminar evidencia"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
-      
-      <div className="p-4">
-        {evidence.description && (
-          <p className="text-gray-700 text-sm mb-2">{evidence.description}</p>
-        )}
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span className="flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {formatDate(evidence.createdAt)}
-          </span>
-          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full capitalize">
-            {evidence.phase}
-          </span>
+    <div className="border rounded-xl p-3 bg-white">
+      <p className="text-sm font-medium mb-2">{titulo}</p>
+
+      {/* Vistas previas locales con opción de quitar */}
+      {previasLocales.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs text-amber-600 mb-1">
+            Pendiente de enviar (previsualización local)
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            {previasLocales.map((src, i) => (
+              <div key={i} className="relative group">
+                <img
+                  src={src}
+                  className="w-16 h-16 object-cover rounded-lg border border-amber-300"
+                  alt={`Previsualización local ${i + 1}`}
+                />
+                
+                {/* Botón para remover la imagen local */}
+                {onRemoveLocal && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveLocal(i)}
+                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition shadow-md"
+                    title="Quitar foto"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Archivos ya guardados en el servidor */}
+      {archivosGuardados.length > 0 ? (
+        <div>
+          <p className="text-xs text-green-600 mb-1">Guardado en el servidor</p>
+          <div className="flex gap-2 flex-wrap">
+            {archivosGuardados.map((archivo) => (
+              <a
+                key={archivo._id || archivo.fileName}
+                href={FilesService.urlPublica(archivo)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={FilesService.urlPublica(archivo)}
+                  alt={archivo.originalName}
+                  className="w-16 h-16 object-cover rounded-lg border hover:opacity-90 transition"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : (
+        previasLocales.length === 0 && (
+          <p className="text-xs text-gray-400 italic">Sin evidencias todavía</p>
+        )
+      )}
     </div>
   );
-};
+}

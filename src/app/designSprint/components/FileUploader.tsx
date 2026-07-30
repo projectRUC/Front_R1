@@ -1,144 +1,92 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import { uploadFile, UploadedFile } from '../services/filesApi';
+import { useState, useCallback, ChangeEvent } from "react";
 
-interface FileUploaderProps {
-  onFileUploaded: (file: UploadedFile) => void;
-  disabled?: boolean;
+interface ImageBase64UploaderProps {
+  label?: string;
+  multiple?: boolean;
+  onChange: (files: File[], previews: string[]) => void;
 }
 
-export const FileUploader: React.FC<FileUploaderProps> = ({
-  onFileUploaded,
-  disabled = false,
-}) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export function ImageBase64Uploader({
+  label = "Subir evidencia",
+  multiple = false,
+  onChange,
+}: ImageBase64UploaderProps) {
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const handleFile = async (file: File) => {
-    setError(null);
-    setIsUploading(true);
+  const handleFiles = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const fileList = e.target.files;
+      if (!fileList || fileList.length === 0) return;
 
-    try {
-      // Validar tamaño (10MB para files/upload)
-      const maxSize = 10 * 1024 * 1024;
-      if (file.size > maxSize) {
-        throw new Error('El archivo no debe superar los 10MB');
-      }
+      const newFiles = Array.from(fileList);
+      const lecturas = newFiles.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader(); // 👈 Solo una declaración
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          })
+      );
 
-      // Generar preview para imágenes
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => setPreview(e.target?.result as string);
-        reader.readAsDataURL(file);
-      }
+      Promise.all(lecturas).then((base64Previews) => {
+        const updatedFiles = multiple ? [...selectedFiles, ...newFiles] : newFiles;
+        const updatedPreviews = multiple ? [...previews, ...base64Previews] : base64Previews;
 
-      // Subir al backend
-      const result = await uploadFile(file);
-      setUploadedFile(result);
-      onFileUploaded(result);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al subir archivo';
-      setError(message);
-    } finally {
-      setIsUploading(false);
-    }
+        setSelectedFiles(updatedFiles);
+        setPreviews(updatedPreviews);
+        onChange(updatedFiles, updatedPreviews);
+      });
+
+      // Limpia el input para permitir volver a seleccionar la misma imagen si se desea
+      e.target.value = "";
+    },
+    [multiple, selectedFiles, previews, onChange]
+  );
+
+  const removeImage = (index: number) => {
+    const updatedFiles = selectedFiles.filter((_, i) => i !== index);
+    const updatedPreviews = previews.filter((_, i) => i !== index);
+
+    setSelectedFiles(updatedFiles);
+    setPreviews(updatedPreviews);
+    onChange(updatedFiles, updatedPreviews);
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && !disabled) handleFile(file);
-  };
-
-  const isImage = uploadedFile?.mimeType?.startsWith('image/');
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-  const formatSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  if (uploadedFile) {
-    return (
-      <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-        {isImage ? (
-          <img
-            src={`${API_BASE_URL}${uploadedFile.url}`}
-            alt={uploadedFile.originalName}
-            className="w-full h-64 object-contain bg-gray-100"
-          />
-        ) : (
-          <div className="p-6 flex items-center space-x-4">
-            <span className="text-5xl">📎</span>
-            <div>
-              <p className="font-medium truncate">{uploadedFile.originalName}</p>
-              <p className="text-sm text-gray-500">{formatSize(uploadedFile.size)}</p>
-            </div>
-          </div>
-        )}
-        <div className="bg-white border-t px-4 py-3 flex justify-between items-center">
-          <span className="text-sm text-green-600">✅ Subido</span>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="text-sm bg-white border px-3 py-1.5 rounded-lg hover:bg-gray-100"
-          >
-            Cambiar
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="w-full">
-      <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" disabled={disabled} />
-      
-      <div
-        onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-        onClick={() => !disabled && fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer min-h-[200px] flex flex-col items-center justify-center
-          ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        {isUploading ? (
-          <div className="flex flex-col items-center space-y-3">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600">Subiendo archivo...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center space-y-3">
-            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <div>
-              <p className="text-gray-700 font-medium">Arrastra y suelta tu archivo</p>
-              <p className="text-gray-500 text-sm mt-1">o haz clic para seleccionar</p>
-              <p className="text-gray-400 text-xs mt-2">Imágenes, PDF, Word, Excel, videos • Máx. 10MB</p>
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <input
+        type="file"
+        accept="image/*"
+        multiple={multiple}
+        onChange={handleFiles}
+        className="text-sm file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border file:border-gray-300 file:bg-white file:text-sm hover:file:bg-gray-50 cursor-pointer"
+      />
+      {previews.length > 0 && (
+        <div className="flex gap-2 flex-wrap mt-2">
+          {previews.map((src, i) => (
+            <div key={i} className="relative group">
+              <img
+                src={src}
+                alt={`Previsualización ${i + 1}`}
+                className="w-20 h-20 object-cover rounded-lg border"
+              />
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-700 transition shadow"
+                title="Eliminar foto seleccionada"
+              >
+                ✕
+              </button>
             </div>
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
+          ))}
         </div>
       )}
     </div>
   );
-};
+}
