@@ -1,4 +1,25 @@
+
+import axios from 'axios';
+
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+// BLINDAJE HTTPS
+// Verificamos estrictamente que en producción la URL apunte a un protocolo seguro (HTTPS / TLS 1.3)
+if (process.env.NODE_ENV === 'production' && !API_BASE_URL.startsWith('https://')) {
+    throw new Error("SECURITY POLICY VIOLATION: La variable NEXT_PUBLIC_API_URL debe usar estrictamente HTTPS en producción. El despliegue ha sido abortado por seguridad.");
+}
+
+// Creamos la instancia centralizada para que todo el FrontEnd la use
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+export default api;
+
 
 export async function fetchApi<T>(
   endpoint: string,
@@ -110,3 +131,4 @@ export async function fetchApiForm<T>(
 
   return text ? JSON.parse(text) : (null as unknown as T);
 }
+

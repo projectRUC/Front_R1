@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sistema PAEC",
   description: "Gestión Escolar y de Proyectos",
+  manifest: "/manifest.json", //Para leer el manifiesto de la PWA
 };
 
 export default function RootLayout({

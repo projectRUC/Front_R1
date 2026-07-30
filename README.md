@@ -148,6 +148,25 @@ graph TD
 
 <img width="23957" height="7470" alt="Tablero en blanco (1)" src="https://github.com/user-attachments/assets/c5958419-7c60-4335-acd7-cc5da62d8690" />
 
+## Diagrama de Arquitectura del Sistema
+![alt text](<Diagrama de arquitectura del sistema.png>)
+
+**Instrucciones claras para ejecutar el cliente en local**
+Para ejecutar la aplicación en local con soporte para desarrollo y pruebas de PWA/HTTPS:
+
+**Instalar dependencias:**
+```
+npm install
+```
+
+**Configurar variables de entorno:**
+Crea un archivo .env en la raíz del proyecto asegurando que la URL de la API apunte correctamente. El sistema cuenta con validación estricta para exigir https:// en producción.
+
+**Iniciar el servidor local**
+```
+npm run dev
+```
+
 ## Estructura de carpetas
 
 ```text
@@ -287,7 +306,8 @@ npm run test:cov    # Cobertura
 
 | Rol | Correo | Contraseña |
 |---|---|---|
-| - | - | - |
+| Docente | Por Definir | Por Definir |
+| Alumno | Por Definir | Por Definir |
 
 ## Flujo de trabajo Git
 
