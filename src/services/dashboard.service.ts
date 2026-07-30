@@ -81,6 +81,10 @@ export interface SprintPeriodo {
   fecha_inicio?: string;
   fecha_fin?: string;
   objetivo?: string;
+  aprobado?: boolean;
+  docenteAprobadorId?: number;
+  fechaAprobacion?: string;
+  comentariosDocente?: string;
 }
 
 export interface ActividadProyectoItem {
@@ -134,7 +138,7 @@ export interface DetalleProyectoEquipoResponse {
  * y renderizar tarjetas sin recarga de datos pesados innecesarios.
  */
 export const dashboardService = {
-  getCurrentUser: () => fetchApi<UserProfile>("/auth/me"),
+  getCurrentUser: () => fetchApi<UserProfile>("/auth/me", { method: "POST" }),
   getAlumnoProyectosEquipos: () =>
     fetchApi<AlumnoProyectosEquiposResponse>("/dashboard/alumno/proyectos-equipos"),
   getAlumnoActividades: () =>
@@ -174,6 +178,11 @@ export const dashboardService = {
     }),
   updateParcial: (equipoId: number, numParcial: number, payload: { fechaInicio?: string; fechaFin?: string; objetivo?: string }) =>
     fetchApi<{ message: string }>(`/dashboard/detalle-proyecto-equipo/${equipoId}/parciales/${numParcial}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  aprobarParcial: (equipoId: number, numParcial: number, payload: { comentarios: string }) =>
+    fetchApi<{ message: string }>(`/dashboard/detalle-proyecto-equipo/${equipoId}/parciales/${numParcial}/aprobar`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
