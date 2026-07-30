@@ -8,7 +8,7 @@ import { useSidebar } from '@/context/SidebarContext';
 export const DashboardHeader: React.FC = () => {
   const { user } = useUser();
   const { toggleSidebar } = useSidebar();
-  
+
   const rawRol = user?.rol || '';
   // Pluralizar el rol
   const pluralRol = rawRol.endsWith('s') || rawRol === '' ? rawRol : `${rawRol}s`;
@@ -19,7 +19,7 @@ export const DashboardHeader: React.FC = () => {
         <button onClick={toggleSidebar} className="p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors">
           <Icon icon="solar:hamburger-menu-linear" className="w-6 h-6 text-gray-500" />
         </button>
-        <span className="text-xl font-black bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+        <span className="text-xl font-black bg-gradient-to-r from-blue-500 via-sky-500 to-cyan-500 bg-clip-text text-transparent">
           Sistema PAEC
         </span>
       </div>

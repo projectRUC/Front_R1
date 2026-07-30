@@ -347,10 +347,10 @@ function ProyectoDetalleContent() {
         <h2 className="text-xl font-bold text-red-700 dark:text-red-400">Portal No Disponible</h2>
         <p className="text-sm text-red-600 dark:text-red-300">{error || 'El proyecto solicitado no pudo ser resuelto.'}</p>
         <button
-          onClick={() => router.push('/dashboard/proyectos-equipos')}
+          onClick={() => router.push(user?.rol === 'Docente' ? '/dashboard/proyectos' : '/dashboard/mis-proyectos')}
           className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-red-700 transition-all"
         >
-          Regresar a Proyectos y Equipos
+          Regresar a Proyectos
         </button>
       </div>
     );
@@ -368,13 +368,13 @@ function ProyectoDetalleContent() {
       {/* Barra de Navegación e Identificadores */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <button
-          onClick={() => router.push('/dashboard/proyectos-equipos')}
+          onClick={() => router.push(user?.rol === 'Docente' ? '/dashboard/proyectos' : '/dashboard/mis-proyectos')}
           className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-white transition-colors w-fit"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Volver a Proyectos y Equipos
+          Volver a Proyectos
         </button>
         <div className="flex items-center gap-2">
           {isReadOnly && (

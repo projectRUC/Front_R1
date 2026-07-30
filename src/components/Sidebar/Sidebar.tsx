@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { SidebarHeader } from './SidebarHeader';
 
 export const Sidebar: React.FC = () => {
   const { user, loading } = useUser();
@@ -35,11 +36,21 @@ export const Sidebar: React.FC = () => {
     },
     // Enlaces de Alumno / Scrum Master
     {
-      label: 'Proyectos y Equipos',
-      href: '/dashboard/proyectos-equipos',
+      label: 'Mis Proyectos',
+      href: '/dashboard/mis-proyectos',
       icon: (
         <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+      visible: isAlumno,
+    },
+    {
+      label: 'Mis Equipos',
+      href: '/dashboard/equipos',
+      icon: (
+        <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
       visible: isAlumno,
@@ -110,24 +121,10 @@ export const Sidebar: React.FC = () => {
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Cabecera / Logo */}
-        <div className="p-6 overflow-y-auto">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 font-extrabold text-white text-xl flex-shrink-0">
-              R1
-            </div>
-            <div>
-              <span className="text-xl font-black bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent block">
-                Sistema PAEC
-              </span>
-              <p className="text-xs text-gray-500 dark:text-zinc-400 font-medium">
-                Gestión de Proyectos
-              </p>
-            </div>
-          </div>
-
-          {/* Menú de Navegación por Rol */}
-          <nav className="mt-8 space-y-2">
+        {/* Cabecera y Menú */}
+        <div className="overflow-y-auto">
+          <SidebarHeader />
+          <nav className="mt-4 space-y-2 px-6 pb-6">
             <p className="px-3 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-3">
               Menú Principal {user?.rol ? `(${user.rol})` : ''}
             </p>

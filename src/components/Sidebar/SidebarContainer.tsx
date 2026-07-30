@@ -33,7 +33,7 @@ export const SidebarContainer: React.FC = () => {
     },
     {
       label: 'Proyectos',
-      href: isDocente ? '/dashboard/proyectos' : '/dashboard/proyectos-equipos',
+      href: isDocente ? '/dashboard/proyectos' : '/dashboard/mis-proyectos',
       icon: 'solar:folder-with-files-bold-duotone',
       visible: true,
     },

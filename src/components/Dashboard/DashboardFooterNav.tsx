@@ -23,8 +23,8 @@ export const DashboardFooterNav: React.FC = () => {
     );
   } else if (isAlumno) {
     links.push(
-      { label: 'Proyectos', href: '/dashboard/proyectos-equipos', icon: 'solar:folder-with-files-bold-duotone', variant: 'primary' },
-      { label: 'Equipos', href: '/dashboard/proyectos-equipos', icon: 'solar:users-group-two-rounded-bold-duotone', variant: 'secondary' },
+      { label: 'Proyectos', href: '/dashboard/mis-proyectos', icon: 'solar:folder-with-files-bold-duotone', variant: 'primary' },
+      { label: 'Equipos', href: '/dashboard/equipos', icon: 'solar:users-group-two-rounded-bold-duotone', variant: 'secondary' },
       { label: 'Actividades', href: '/dashboard/actividades', icon: 'solar:clipboard-list-bold-duotone', variant: 'tertiary' }
     );
   }
