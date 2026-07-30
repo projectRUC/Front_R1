@@ -11,6 +11,7 @@
   "dependencies": {
     "@heroui/react": "^3.2.2",
     "@heroui/theme": "^2.4.26",
+    "@iconify/react": "^6.0.2",
     "axios": "^1.18.1",
     "framer-motion": "^12.42.2",
     "markdown-pdf": "^11.0.0",

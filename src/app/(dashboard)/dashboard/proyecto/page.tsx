@@ -9,6 +9,8 @@ import { Loader } from '@/components/Loader';
 import { HerramientasEvaluadasTable } from '@/app/herramientas/components/HerramientasEvaluadasTable';
 import { DocenteFeedbackBox } from '@/app/herramientas/components/DocenteFeedbackBox';
 import DesignSprintGate from '@/app/designSprint/DesignSprintGate';
+import { kanbanService } from '@/services/kanban.service';
+import { DocenteParcialApprovalBar } from '@/components/Projects/DocenteParcialApprovalBar';
 
 type TabType = 'info' | 'miembros' | 'design_sprint' | 'actividades' | 'kanban' | 'herramientas';
 
@@ -66,8 +68,9 @@ function ProyectoDetalleContent() {
 
   // Actividades & Kanban Drag
   const [actModal, setActModal] = useState<boolean>(false);
-  const [actForm, setActForm] = useState({ nombreActividad: '', fechaInicio: '', fechaFin: '', usuarioAsignadoId: 0 });
+  const [actForm, setActForm] = useState({ nombreActividad: '', descripcion: '', criterios: '', fechaInicio: '', fechaFin: '', usuarioAsignadoId: 0 });
   const [savingAct, setSavingAct] = useState<boolean>(false);
+  const [loadingAI, setLoadingAI] = useState<boolean>(false);
   const [draggedActId, setDraggedActId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
@@ -220,12 +223,31 @@ function ProyectoDetalleContent() {
       setSavingAct(true);
       await dashboardService.createActividad(equipoId, actForm);
       setActModal(false);
-      setActForm({ nombreActividad: '', fechaInicio: '', fechaFin: '', usuarioAsignadoId: data?.equipo.miembros[0]?.usuId || 0 });
+      setActForm({ nombreActividad: '', descripcion: '', criterios: '', fechaInicio: '', fechaFin: '', usuarioAsignadoId: data?.equipo.miembros[0]?.usuId || 0 });
       await fetchDetalle();
     } catch (err: any) {
       alert(err.message || 'Error al crear actividad.');
     } finally {
       setSavingAct(false);
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    if (!actForm.nombreActividad || !actForm.descripcion) {
+      alert("Por favor ingresa al menos el nombre y la descripción para que la IA genere los criterios.");
+      return;
+    }
+    try {
+      setLoadingAI(true);
+      const res = await kanbanService.generateCriteria(actForm.nombreActividad, actForm.descripcion);
+      if (res && res.criterios) {
+        setActForm(prev => ({ ...prev, criterios: res.criterios }));
+      }
+    } catch (error) {
+      console.error("Error generando criterios con IA:", error);
+      alert("Ocurrió un error al generar los criterios con IA.");
+    } finally {
+      setLoadingAI(false);
     }
   };
 
@@ -325,10 +347,10 @@ function ProyectoDetalleContent() {
         <h2 className="text-xl font-bold text-red-700 dark:text-red-400">Portal No Disponible</h2>
         <p className="text-sm text-red-600 dark:text-red-300">{error || 'El proyecto solicitado no pudo ser resuelto.'}</p>
         <button
-          onClick={() => router.push('/dashboard/proyectos-equipos')}
+          onClick={() => router.push(user?.rol === 'Docente' ? '/dashboard/proyectos' : '/dashboard/mis-proyectos')}
           className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-red-700 transition-all"
         >
-          Regresar a Proyectos y Equipos
+          Regresar a Proyectos
         </button>
       </div>
     );
@@ -346,13 +368,13 @@ function ProyectoDetalleContent() {
       {/* Barra de Navegación e Identificadores */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <button
-          onClick={() => router.push('/dashboard/proyectos-equipos')}
+          onClick={() => router.push(user?.rol === 'Docente' ? '/dashboard/proyectos' : '/dashboard/mis-proyectos')}
           className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-white transition-colors w-fit"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Volver a Proyectos y Equipos
+          Volver a Proyectos
         </button>
         <div className="flex items-center gap-2">
           {isReadOnly && (
@@ -368,6 +390,16 @@ function ProyectoDetalleContent() {
           </span>
         </div>
       </div>
+
+      {isReadOnly && (
+        <DocenteParcialApprovalBar 
+          equipoId={equipo.id}
+          parciales={proyecto.parciales || []}
+          onApproveSuccess={() => {
+            fetchDetalle();
+          }} 
+        />
+      )}
 
       {/* Banner Principal Vibrante */}
       <motion.div
@@ -1315,6 +1347,39 @@ function ProyectoDetalleContent() {
                     value={actForm.nombreActividad}
                     onChange={(e) => setActForm({ ...actForm, nombreActividad: e.target.value })}
                     className="w-full h-12 px-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm text-gray-900 dark:text-white font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase text-gray-600 dark:text-zinc-400 block mb-1">Descripción</label>
+                  <textarea
+                    required
+                    placeholder="Detalles de lo que se debe hacer..."
+                    value={actForm.descripcion}
+                    onChange={(e) => setActForm({ ...actForm, descripcion: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl text-sm text-gray-900 dark:text-white resize-none"
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold uppercase text-gray-600 dark:text-zinc-400 block">Criterios de Aceptación</label>
+                    <button
+                      type="button"
+                      onClick={handleGenerateAI}
+                      disabled={loadingAI}
+                      className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      {loadingAI ? 'Generando...' : '✨ Generar con IA'}
+                    </button>
+                  </div>
+                  <textarea
+                    value={actForm.criterios}
+                    onChange={(e) => setActForm({ ...actForm, criterios: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl text-xs font-mono text-gray-900 dark:text-white resize-none"
+                    rows={3}
+                    placeholder="- [ ] Criterio 1..."
                   />
                 </div>
 

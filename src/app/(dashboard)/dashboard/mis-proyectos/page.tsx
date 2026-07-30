@@ -7,13 +7,12 @@ import { dashboardService, AlumnoProyectosEquiposResponse } from '@/services/das
 import { useUser } from '@/context/UserContext';
 import { Loader } from '@/components/Loader';
 
-export default function ProyectosEquiposPage() {
+export default function MisProyectosPage() {
   const { user } = useUser();
   const router = useRouter();
   const [data, setData] = useState<AlumnoProyectosEquiposResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'proyectos' | 'equipos'>('proyectos');
 
   // Estado del modal de creación
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -63,7 +62,7 @@ export default function ProyectosEquiposPage() {
   };
 
   if (loading) {
-    return <Loader message="Sintetizando información optimizada de Proyectos y Equipos..." />;
+    return <Loader message="Sintetizando información de Proyectos..." />;
   }
 
   if (error) {
@@ -79,7 +78,6 @@ export default function ProyectosEquiposPage() {
   }
 
   const proyectos = data?.proyectos || [];
-  const equipos = data?.equipos || [];
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return 'Por definir';
@@ -103,10 +101,10 @@ export default function ProyectosEquiposPage() {
             Módulo Alumno / Scrum Master
           </span>
           <h1 className="text-2xl lg:text-3xl font-black mt-2.5 text-gray-900 dark:text-white">
-            Mis Proyectos y Equipos
+            Mis Proyectos
           </h1>
           <p className="text-sm text-gray-600 dark:text-zinc-400 mt-1">
-            Información esencial sincronizada de tus asignaciones grupales y fechas de entrega.
+            Información esencial de tus asignaciones y fechas de entrega.
           </p>
         </div>
 
@@ -125,199 +123,81 @@ export default function ProyectosEquiposPage() {
               Crear Proyecto y Equipo
             </motion.button>
           )}
-
-          {/* Selector de Pestañas (Proyectos vs Equipos) */}
-          <div className="flex p-1.5 bg-gray-200 dark:bg-zinc-800/80 rounded-2xl w-fit">
-            <button
-              onClick={() => setActiveTab('proyectos')}
-              className={`px-5 py-2 rounded-xl font-bold text-sm transition-all shadow-xs ${
-                activeTab === 'proyectos'
-                  ? 'bg-white dark:bg-zinc-700 text-indigo-600 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Proyectos ({proyectos.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('equipos')}
-              className={`px-5 py-2 rounded-xl font-bold text-sm transition-all shadow-xs ${
-                activeTab === 'equipos'
-                  ? 'bg-white dark:bg-zinc-700 text-indigo-600 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Equipos ({equipos.length})
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Pestaña: Tarjetas de Proyectos */}
-      {activeTab === 'proyectos' && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-4"
-        >
-          {proyectos.length === 0 ? (
-            <div className="p-12 text-center bg-white dark:bg-zinc-900/60 rounded-3xl border border-dashed border-gray-300 dark:border-zinc-800">
-              <p className="text-gray-500 dark:text-zinc-500 font-medium">
-                No te encuentras inscrito en ningún proyecto activo en este momento.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {proyectos.map((proy, i) => (
-                <motion.div
-                  key={`${proy.id}-${i}`}
-                  whileHover={{ scale: 1.02, translateY: -3 }}
-                  onClick={() => {
-                    if (proy.equipoId) {
-                      router.push(`/dashboard/proyecto?proyectoId=${proy.id}&equipoId=${proy.equipoId}`);
-                    } else {
-                      alert('Falta asociar este proyecto a un equipo con identificador válido en el servidor.');
-                    }
-                  }}
-                  className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all flex flex-col justify-between cursor-pointer group"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                        {proy.grupo || 'Grupo Escolar'}
-                      </span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Proyecto Activo" />
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
+        {proyectos.length === 0 ? (
+          <div className="p-12 text-center bg-white dark:bg-zinc-900/60 rounded-3xl border border-dashed border-gray-300 dark:border-zinc-800">
+            <p className="text-gray-500 dark:text-zinc-500 font-medium">
+              No te encuentras inscrito en ningún proyecto activo en este momento.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {proyectos.map((proy, i) => (
+              <motion.div
+                key={`${proy.id}-${i}`}
+                whileHover={{ scale: 1.02, translateY: -3 }}
+                onClick={() => {
+                  if (proy.equipoId) {
+                    router.push(`/dashboard/proyecto?proyectoId=${proy.id}&equipoId=${proy.equipoId}`);
+                  } else {
+                    alert('Falta asociar este proyecto a un equipo con identificador válido en el servidor.');
+                  }
+                }}
+                className="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                      {proy.grupo || 'Grupo Escolar'}
+                    </span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Proyecto Activo" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2">
+                    {proy.nombreProyecto}
+                  </h3>
+                  <div className="mt-4 p-3 rounded-2xl bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-700/60 flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-sm">
+                      EQ
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2">
-                      {proy.nombreProyecto}
-                    </h3>
-                    <div className="mt-4 p-3 rounded-2xl bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-700/60 flex items-center space-x-3">
-                      <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-sm">
-                        EQ
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-gray-400 dark:text-zinc-500 uppercase font-bold">Equipo asignado</p>
-                        <p className="text-sm font-semibold text-gray-800 dark:text-zinc-200 truncate">
-                          {proy.nombreEquipo}
-                        </p>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-gray-400 dark:text-zinc-500 uppercase font-bold">Equipo asignado</p>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-zinc-200 truncate">
+                        {proy.nombreEquipo}
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Fechas y Acción de Salida */}
-                  <div>
-                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Inicio</span>
-                        <span className="font-bold text-gray-700 dark:text-zinc-300">{formatDate(proy.fechaInicio)}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Fin</span>
-                        <span className="font-bold text-indigo-600 dark:text-indigo-400">{formatDate(proy.fechaFin)}</span>
-                      </div>
+                {/* Fechas y Acción de Salida */}
+                <div>
+                  <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Inicio</span>
+                      <span className="font-bold text-gray-700 dark:text-zinc-300">{formatDate(proy.fechaInicio)}</span>
                     </div>
-                    <div className="mt-4 py-2.5 px-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-600 transition-all flex items-center justify-between text-xs font-black shadow-2xs">
-                      <span>Ver Portal, Kanban & Tareas</span>
-                      <span>➔</span>
+                    <div className="text-right">
+                      <span className="text-gray-400 dark:text-zinc-500 font-semibold block">Fecha Fin</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400">{formatDate(proy.fechaFin)}</span>
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Pestaña: Tarjetas de Equipos */}
-      {activeTab === 'equipos' && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-4"
-        >
-          {equipos.length === 0 ? (
-            <div className="p-12 text-center bg-white dark:bg-zinc-900/60 rounded-3xl border border-dashed border-gray-300 dark:border-zinc-800">
-              <p className="text-gray-500 dark:text-zinc-500 font-medium">
-                No tienes equipos asignados de momento.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {equipos.map((eq, i) => (
-                <motion.div
-                  key={`${eq.id}-${i}`}
-                  whileHover={{ scale: 1.01 }}
-                  className="rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200/80 dark:border-zinc-800 p-6 shadow-md flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-4 mb-4">
-                      <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                          {eq.nombreProyecto}
-                        </span>
-                        <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-0.5">
-                          {eq.nombreEquipo}
-                        </h3>
-                      </div>
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300">
-                        {eq.grupo || 'Grupo'}
-                      </span>
-                    </div>
-
-                    <p className="text-xs font-bold uppercase text-gray-400 dark:text-zinc-500 mb-3">
-                      Miembros e Integrantes ({eq.miembros.length})
-                    </p>
-                    <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                      {eq.miembros.map((miem, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800/80"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                              {miem.nombre ? miem.nombre.charAt(0).toUpperCase() : 'M'}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                {miem.nombre}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-zinc-400">
-                                {miem.correo}
-                              </p>
-                            </div>
-                          </div>
-                          <span
-                            className={`px-2.5 py-1 rounded-xl text-xs font-extrabold ${
-                              miem.rol === 'Scrum Master' || idx === 0
-                                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800'
-                                : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50'
-                            }`}
-                          >
-                            {miem.rol}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {eq.proyectoId && (
-                      <div className="pt-4 mt-4 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
-                        <button
-                          onClick={() => router.push(`/dashboard/proyecto?proyectoId=${eq.proyectoId}&equipoId=${eq.id}`)}
-                          className="px-5 py-2.5 bg-gradient-to-tr from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black rounded-2xl transition-all flex items-center gap-2 shadow-md"
-                        >
-                          <span>🚀 Ir a Portal del Proyecto & Kanban</span>
-                          <span>➔</span>
-                        </button>
-                      </div>
-                    )}
+                  <div className="mt-4 py-2.5 px-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-600 transition-all flex items-center justify-between text-xs font-black shadow-2xs">
+                    <span>Ver Portal, Kanban & Tareas</span>
+                    <span>➔</span>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* Modal interactivo de Creación Híbrida */}
       <AnimatePresence>

@@ -1,7 +1,10 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+export async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   let response: Response;
   try {
@@ -14,9 +17,17 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
       credentials: "include",
     });
   } catch (err: any) {
-    if (err instanceof TypeError || err?.message?.includes("fetch") || err?.name === "TypeError") {
-      console.warn(`[Servidor Offline] Inaccesible: ${url}. ¿Está corriendo 'npm run start:dev' en Back_R1?`);
-      throw new Error("No se pudo contactar con el servidor (API offline). Asegúrate de iniciar Back_R1 en el puerto 4000.");
+    if (
+      err instanceof TypeError ||
+      err?.message?.includes("fetch") ||
+      err?.name === "TypeError"
+    ) {
+      console.warn(
+        `[Servidor Offline] Inaccesible: ${url}. ¿Está corriendo 'npm run start:dev' en Back_R1?`,
+      );
+      throw new Error(
+        "No se pudo contactar con el servidor (API offline). Asegúrate de iniciar Back_R1 en el puerto 4000.",
+      );
     }
     throw err;
   }
@@ -52,9 +63,9 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
 export async function fetchApiForm<T>(
   endpoint: string,
   formData: FormData,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
   let response: Response;
   try {
@@ -65,9 +76,17 @@ export async function fetchApiForm<T>(
       credentials: "include",
     });
   } catch (err: any) {
-    if (err instanceof TypeError || err?.message?.includes("fetch") || err?.name === "TypeError") {
-      console.warn(`[Servidor Offline] Inaccesible: ${url}. ¿Está corriendo 'npm run start:dev' en Back_R1?`);
-      throw new Error("No se pudo contactar con el servidor (API offline). Asegúrate de iniciar Back_R1 en el puerto 4000.");
+    if (
+      err instanceof TypeError ||
+      err?.message?.includes("fetch") ||
+      err?.name === "TypeError"
+    ) {
+      console.warn(
+        `[Servidor Offline] Inaccesible: ${url}. ¿Está corriendo 'npm run start:dev' en Back_R1?`,
+      );
+      throw new Error(
+        "No se pudo contactar con el servidor (API offline). Asegúrate de iniciar Back_R1 en el puerto 4000.",
+      );
     }
     throw err;
   }
