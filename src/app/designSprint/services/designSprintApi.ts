@@ -1,53 +1,57 @@
-import {
-  FaseDesignSprint,
-  type CreateEvidenceDTO,
-  type DesignSprintEvidence,
-  type AvanceDesignSprint,
-  type ApiErrorResponse,
-} from '@/types/designSprint';
+import { fetchApi, fetchApiForm } from "@/services/api";
+import { SprintDesign } from "@/types/designSprint";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-export class DesignSprintApiError extends Error {
-  constructor(public statusCode: number, message: string, public backendError?: string) {
-    super(message);
-    this.name = 'DesignSprintApiError';
-  }
-}
+export const DesignSprintService = {
+  crear: (eq_id: number, proyecto_id: string) =>
+    fetchApi<SprintDesign>("/design-sprint", {
+      method: "POST",
+      body: JSON.stringify({ eq_id, proyecto_id }),
+    }),
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    let errorData: ApiErrorResponse;
-    try { errorData = await response.json(); } catch {
-      throw new DesignSprintApiError(response.status, `Error ${response.status}: ${response.statusText}`);
-    }
-    throw new DesignSprintApiError(errorData.statusCode || response.status, errorData.message || 'Error desconocido', errorData.error);
-  }
-  return response.json();
-}
+  obtenerPorId: (id: string) => fetchApi<SprintDesign>(`/design-sprint/${id}`),
 
-function getHeaders(): HeadersInit {
-  return { 'Content-Type': 'application/json' };
-}
+  obtenerPorEquipoYProyecto: (eq_id: number, proyecto_id: string) =>
+    fetchApi<SprintDesign>(`/design-sprint?eq_id=${eq_id}&proyecto_id=${proyecto_id}`),
 
-export async function registrarEvidencia(data: CreateEvidenceDTO): Promise<DesignSprintEvidence> {
-  console.log('📤 Enviando:', { ...data, archivosIds: data.archivosUrls  });
-  const response = await fetch(`${API_BASE_URL}/design-sprint/evidencias`, {
-    method: 'POST', headers: getHeaders(), body: JSON.stringify(data),
-  });
-  return handleResponse<DesignSprintEvidence>(response);
-}
+  registrarMapeo: (
+    id: string,
+    data: { proyecto_problema: string; proyecto_objective: string; enfoque: string; comentario?: string },
+    archivos: File[]
+  ) => {
+    const form = new FormData();
+    Object.entries(data).forEach(([k, v]) => v && form.append(k, v));
+    archivos.forEach((f) => form.append("archivos", f));
+    return fetchApiForm<SprintDesign>(`/design-sprint/${id}/mapeo`, form);
+  },
 
-export async function consultarAvance(equipoId: number, proyectoId: string): Promise<AvanceDesignSprint> {
-  const response = await fetch(`${API_BASE_URL}/design-sprint/equipos/${equipoId}/proyectos/${proyectoId}`, {
-    method: 'GET', headers: getHeaders(),
-  });
-  return handleResponse<AvanceDesignSprint>(response);
-}
+  registrarBoceto: (
+    id: string,
+    data: { propuesta: string; usu_id: number; status?: string; comentario?: string },
+    archivos: File[]
+  ) => {
+    const form = new FormData();
+    Object.entries(data).forEach(([k, v]) => v !== undefined && form.append(k, String(v)));
+    archivos.forEach((f) => form.append("archivos", f));
+    return fetchApiForm<SprintDesign>(`/design-sprint/${id}/boceto`, form);
+  },
 
-export async function consultarFase(equipoId: number, proyectoId: string, fase: FaseDesignSprint): Promise<DesignSprintEvidence> {
-  const response = await fetch(`${API_BASE_URL}/design-sprint/equipos/${equipoId}/proyectos/${proyectoId}/fases/${fase}`, {
-    method: 'GET', headers: getHeaders(),
-  });
-  return handleResponse<DesignSprintEvidence>(response);
-}
+
+
+  puntuarBoceto: (
+    id: string,
+    bocetoId: string,
+    data: { usu_id: number; valor?: number; comentario?: string }
+  ) =>
+    fetchApi<SprintDesign>(`/design-sprint/${id}/boceto/${bocetoId}/puntuacion`, {
+      method: "POST",
+      body: JSON.stringify({
+        usu_id: Number(data.usu_id),
+        valor: data.valor ?? 1,
+        comentario: data.comentario,
+      }),
+    }),
+
+  // ... registrarPrototipo
+};
+  

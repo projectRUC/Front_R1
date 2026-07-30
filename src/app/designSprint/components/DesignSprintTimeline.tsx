@@ -1,128 +1,48 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { FaseDesignSprint, FASE_INFO } from '@/types/designSprint';
-
-interface PhaseUIState {
-  fase: FaseDesignSprint;
-  status: 'completed' | 'pending' | 'blocked';
-  hasEvidence: boolean;
-}
+import { FaseInfo, FaseKey } from "../hooks/useDesignSprint";
 
 interface DesignSprintTimelineProps {
-  phases: PhaseUIState[];
-  activePhase: FaseDesignSprint;
-  onPhaseClick: (phase: FaseDesignSprint) => void;
+  fases: FaseInfo[];
+  faseActiva: FaseKey;
+  onSelect: (key: FaseKey) => void;
 }
 
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const config: Record<string, { style: string; label: string }> = {
-    completed: { style: 'bg-green-100 text-green-800 border-green-300', label: 'Completado' },
-    pending: { style: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'Pendiente' },
-    blocked: { style: 'bg-red-100 text-red-800 border-red-300', label: 'Bloqueado' },
-  };
-
-  const { style, label } = config[status] || config.pending;
-
-  return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full border ${style}`}>
-      {label}
-    </span>
-  );
+const ESTILOS_ESTADO: Record<string, string> = {
+  completada: "bg-green-100 text-green-700 border-green-300",
+  en_progreso: "bg-blue-100 text-blue-700 border-blue-300",
+  bloqueada: "bg-gray-100 text-gray-400 border-gray-200",
 };
 
-export const DesignSprintTimeline: React.FC<DesignSprintTimelineProps> = ({
-  phases,
-  activePhase,
-  onPhaseClick,
-}) => {
-  if (!phases || phases.length === 0) {
-    return <div className="text-center text-gray-500 py-4">Cargando fases...</div>;
-  }
+const ETIQUETA_ESTADO: Record<string, string> = {
+  completada: "Completada",
+  en_progreso: "En progreso",
+  bloqueada: "Bloqueada",
+};
 
+export function DesignSprintTimeline({ fases, faseActiva, onSelect }: DesignSprintTimelineProps) {
   return (
-    <div className="w-full">
-      {/* Desktop */}
-      <div className="hidden md:block">
-        <div className="flex items-center justify-between relative">
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2" />
-          
-          {phases.map((phase) => {
-            const info = FASE_INFO[phase.fase];
-            if (!info) return null;
-            
-            return (
-              <button
-                key={phase.fase}
-                onClick={() => onPhaseClick(phase.fase)}
-                disabled={phase.status === 'blocked'}
-                className={`
-                  relative z-10 flex flex-col items-center space-y-2 p-3 rounded-lg
-                  transition-all duration-200 min-w-[120px]
-                  ${activePhase === phase.fase ? 'bg-blue-50 scale-105 shadow-sm' : 'hover:bg-gray-50'}
-                  ${phase.status === 'blocked' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                `}
-              >
-                <div className={`
-                  w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold
-                  ${activePhase === phase.fase
-                    ? 'bg-blue-500 text-white'
-                    : phase.status === 'completed'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                  }
-                `}>
-                  {info.day}
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold capitalize">{info.title}</p>
-                  <p className="text-xs text-gray-500">{info.dayName}</p>
-                </div>
-                <StatusBadge status={phase.status} />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Mobile */}
-      <div className="md:hidden space-y-3">
-        {phases.map((phase) => {
-          const info = FASE_INFO[phase.fase];
-          if (!info) return null;
-          
-          return (
-            <button
-              key={phase.fase}
-              onClick={() => onPhaseClick(phase.fase)}
-              disabled={phase.status === 'blocked'}
-              className={`
-                w-full flex items-center space-x-3 p-3 rounded-lg border
-                transition-all duration-200
-                ${activePhase === phase.fase ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}
-                ${phase.status === 'blocked' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-              `}
-            >
-              <div className={`
-                w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0
-                ${activePhase === phase.fase
-                  ? 'bg-blue-500 text-white'
-                  : phase.status === 'completed'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-600'
-                }
-              `}>
-                {info.day}
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-semibold capitalize">{info.title}</p>
-                <p className="text-xs text-gray-500">{info.dayName}</p>
-              </div>
-              <StatusBadge status={phase.status} />
-            </button>
-          );
-        })}
-      </div>
+    <div className="flex gap-2 overflow-x-auto pb-2">
+      {fases.map((fase) => {
+        const activa = fase.key === faseActiva;
+        const bloqueada = fase.estado === "bloqueada";
+        return (
+          <button
+            key={fase.key}
+            disabled={bloqueada}
+            onClick={() => onSelect(fase.key)}
+            className={`flex-1 min-w-[130px] text-left border rounded-xl px-3 py-2 transition
+              ${activa ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-200"}
+              ${bloqueada ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"}`}
+          >
+            <p className="text-[11px] text-gray-400">{fase.dia}</p>
+            <p className="text-sm font-semibold">{fase.nombre}</p>
+            <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full border ${ESTILOS_ESTADO[fase.estado]}`}>
+              {ETIQUETA_ESTADO[fase.estado]}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
-};
+}

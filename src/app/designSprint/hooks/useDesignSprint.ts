@@ -1,103 +1,180 @@
-'use client';
-import { useState, useCallback, useEffect } from 'react';
-import {
-  FaseDesignSprint,
-  type AvanceFase,
-  type DesignSprintEvidence,
-  type PhaseUIState,
-  type CreateEvidenceDTO,
-} from '@/types/designSprint';
-import { registrarEvidencia, consultarAvance, consultarFase, DesignSprintApiError } from '../services/designSprintApi';
+// useDesignSprint.ts
+import { useState, useEffect, useCallback } from "react";
+import { SprintDesign } from "@/types/designSprint";
+import { fetchApi, fetchApiForm } from "@/services/api";
 
-interface UseDesignSprintOptions { equipoId: number; proyectoId: string; }
-interface UseDesignSprintReturn {
-  phases: PhaseUIState[];
-  activePhase: FaseDesignSprint;
-  evidence: DesignSprintEvidence | null;
-  isLoading: boolean;
-  error: string | null;
-  successMessage: string | null;
-  setActivePhase: (phase: FaseDesignSprint) => void;
-  submitEvidence: (data: Omit<CreateEvidenceDTO, 'equipoId' | 'proyectoId'>) => Promise<DesignSprintEvidence>;
-  reloadAvance: () => Promise<void>;
-  clearMessages: () => void;
+export type FaseKey = "mapeo" | "boceto" | "decidir" | "prototipo";
+
+export interface FaseInfo {
+  key: FaseKey;
+  dia: string;
+  nombre: string;
+  estado: "completada" | "en_progreso" | "bloqueada";
 }
 
-function mapAvanceToUIState(avance: AvanceFase[]): PhaseUIState[] {
-  let previousCompleted = true;
-  return avance.map((item) => {
-    const status: PhaseUIState['status'] = item.iniciado ? 'completed' : previousCompleted ? 'pending' : 'blocked';
-    if (!item.iniciado) previousCompleted = false;
-    return { fase: item.fase as FaseDesignSprint, status, hasEvidence: item.iniciado };
-  });
-}
-
-const DEFAULT_PHASES: PhaseUIState[] = [
-  { fase: FaseDesignSprint.MAPEAR, status: 'pending', hasEvidence: false },
-  { fase: FaseDesignSprint.BOCETAR, status: 'blocked', hasEvidence: false },
-  { fase: FaseDesignSprint.DECIDIR, status: 'blocked', hasEvidence: false },
-  { fase: FaseDesignSprint.PROTOTIPAR, status: 'blocked', hasEvidence: false },
-];
-
-export function useDesignSprint({ equipoId, proyectoId }: UseDesignSprintOptions): UseDesignSprintReturn {
-  const [phases, setPhases] = useState<PhaseUIState[]>(DEFAULT_PHASES);
-  const [activePhase, setActivePhase] = useState<FaseDesignSprint>(FaseDesignSprint.MAPEAR);
-  const [evidence, setEvidence] = useState<DesignSprintEvidence | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export function useDesignSprint(sprintId: string) {
+  const [sprint, setSprint] = useState<SprintDesign | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const clearMessages = useCallback(() => { setError(null); setSuccessMessage(null); }, []);
-
-  const reloadAvance = useCallback(async () => {
-    setIsLoading(true); setError(null);
+  const cargarSprint = useCallback(async () => {
     try {
-      const data = await consultarAvance(equipoId, proyectoId);
-      setPhases(mapAvanceToUIState(data));
-    } catch (err) {
-      setError(err instanceof DesignSprintApiError ? err.message : 'Error al cargar avance');
-    } finally { setIsLoading(false); }
-  }, [equipoId, proyectoId]);
+      setError(null);
+      const data = await fetchApi<SprintDesign>(`/design-sprint/${sprintId}`);
+      setSprint(data);
+    } catch (err: any) {
+      setError(err.message || "Error al cargar el Design Sprint");
+    }
+  }, [sprintId]);
 
-  useEffect(() => { reloadAvance(); }, [reloadAvance]);
+  useEffect(() => {
+    if (sprintId) cargarSprint();
+  }, [sprintId, cargarSprint]);
 
-  const loadEvidence = useCallback(async (fase: FaseDesignSprint) => {
-    setEvidence(null); setError(null); setIsLoading(true);
+  // Construcción de la lista de fases para el Timeline
+  const fases: FaseInfo[] = [
+    {
+      key: "mapeo",
+      dia: "Lunes",
+      nombre: "Mapear",
+      estado: sprint?.mapeo?.proyecto_problema
+        ? "completada"
+        : sprint?.status === "mapeo" || !sprint?.status
+        ? "en_progreso"
+        : "bloqueada",
+    },
+    {
+      key: "boceto",
+      dia: "Martes",
+      nombre: "Bocetar",
+      estado:
+        sprint?.bocetos && sprint.bocetos.length > 0
+          ? "completada"
+          : sprint?.status === "boceto"
+          ? "en_progreso"
+          : "bloqueada",
+    },
+    {
+      key: "decidir",
+      dia: "Miércoles",
+      nombre: "Decidir",
+      estado:
+        sprint?.status === "decidir" || sprint?.status === "prototipo"
+          ? "en_progreso"
+          : "bloqueada",
+    },
+    {
+      key: "prototipo",
+      dia: "Jueves",
+      nombre: "Prototipar",
+      estado: sprint?.prototipo?.nombre_prototipo
+        ? "completada"
+        : sprint?.status === "prototipo_completado"
+        ? "en_progreso"
+        : "bloqueada",
+    },
+  ];
+
+  const registrarMapeo = async (
+    data: { proyecto_problema: string; proyecto_objective: string; enfoque: string },
+    files: File[]
+  ) => {
+    setLoading(true);
+    setError(null);
     try {
-      const data = await consultarFase(equipoId, proyectoId, fase);
-      setEvidence(data);
-    } catch (err) {
-      if (err instanceof DesignSprintApiError && err.statusCode === 400) {
-        setEvidence(null);
-      } else {
-        setError(err instanceof DesignSprintApiError ? err.message : 'Error al cargar evidencia');
-      }
-    } finally { setIsLoading(false); }
-  }, [equipoId, proyectoId]);
+      const formData = new FormData();
+      formData.append("proyecto_problema", data.proyecto_problema);
+      formData.append("proyecto_objective", data.proyecto_objective);
+      formData.append("enfoque", data.enfoque);
 
-  useEffect(() => { if (activePhase) loadEvidence(activePhase); }, [activePhase, loadEvidence]);
+      files.forEach((file) => formData.append("archivos", file));
 
-  const submitEvidence = useCallback(async (data: Omit<CreateEvidenceDTO, 'equipoId' | 'proyectoId'>) => {
-    setIsLoading(true); setError(null); setSuccessMessage(null);
+      await fetchApiForm(`/design-sprint/${sprintId}/mapeo`, formData);
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ CORREGIDO: Recibe usuId por parámetro y actualiza el sprint
+  const puntuarBoceto = async (bocetoId: string, usuId: number, valor: number = 1) => {
+    setLoading(true);
+    setError(null);
     try {
-      const payload: CreateEvidenceDTO = { ...data, equipoId, proyectoId };
-      console.log('📤 Enviando payload:', {
-        equipoId: payload.equipoId, proyectoId: payload.proyectoId, fase: payload.fase,
-        archivosUrls: payload.archivosUrls,
-        comentarios: payload.comentarios,
+      await fetchApi(`/design-sprint/${sprintId}/boceto/${bocetoId}/puntuacion`, {
+        method: "POST",
+        body: JSON.stringify({
+          usu_id: Number(usuId),
+          valor: valor,
+        }),
       });
-      const result = await registrarEvidencia(payload);
-      setEvidence(result);
-      setSuccessMessage(`¡Fase "${result.fase}" registrada exitosamente!`);
-      await reloadAvance();
-      setTimeout(() => setSuccessMessage(null), 5000);
-      return result;
-    } catch (err) {
-      const message = err instanceof DesignSprintApiError ? err.message : 'Error al guardar';
-      setError(message);
-      throw err;
-    } finally { setIsLoading(false); }
-  }, [equipoId, proyectoId, reloadAvance]);
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err.message || "Error al votar por el boceto");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return { phases, activePhase, evidence, isLoading, error, successMessage, setActivePhase, submitEvidence, reloadAvance, clearMessages };
+  const registrarBoceto = async (
+    data: { propuesta: string; usu_id: number },
+    files: File[]
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const numericUsuId = Number(data.usu_id);
+      if (isNaN(numericUsuId) || numericUsuId <= 0) {
+        throw new Error("El ID de usuario no es válido para registrar el boceto.");
+      }
+
+      const formData = new FormData();
+      formData.append("propuesta", data.propuesta);
+      formData.append("usu_id", String(numericUsuId));
+
+      files.forEach((file) => formData.append("archivos", file));
+
+      await fetchApiForm(`/design-sprint/${sprintId}/boceto`, formData);
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registrarPrototipo = async (
+    data: { nombre_prototipo: string; descripcion: string },
+    files: File[]
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("nombre_prototipo", data.nombre_prototipo);
+      formData.append("descripcion", data.descripcion);
+
+      files.forEach((file) => formData.append("archivos", file));
+
+      await fetchApiForm(`/design-sprint/${sprintId}/prototipo`, formData);
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    sprint,
+    fases,
+    loading,
+    error,
+    registrarMapeo,
+    registrarBoceto,
+    puntuarBoceto, // 👈 Importante: Agregado al return
+    registrarPrototipo,
+  };
 }
