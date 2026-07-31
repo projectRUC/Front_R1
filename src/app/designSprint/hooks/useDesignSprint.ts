@@ -1,7 +1,6 @@
-// useDesignSprint.ts
 import { useState, useEffect, useCallback } from "react";
 import { SprintDesign } from "@/types/designSprint";
-import { fetchApi, fetchApiForm } from "@/services/api";
+import { DesignSprintService } from "../services/designSprintApi";
 
 export type FaseKey = "mapeo" | "boceto" | "decidir" | "prototipo";
 
@@ -18,20 +17,20 @@ export function useDesignSprint(sprintId: string) {
   const [error, setError] = useState<string | null>(null);
 
   const cargarSprint = useCallback(async () => {
+    if (!sprintId) return;
     try {
       setError(null);
-      const data = await fetchApi<SprintDesign>(`/design-sprint/${sprintId}`);
+      const data = await DesignSprintService.obtenerPorId(sprintId);
       setSprint(data);
     } catch (err: any) {
-      setError(err.message || "Error al cargar el Design Sprint");
+      setError(err?.message || "Error al cargar el Design Sprint");
     }
   }, [sprintId]);
 
   useEffect(() => {
-    if (sprintId) cargarSprint();
-  }, [sprintId, cargarSprint]);
+    cargarSprint();
+  }, [cargarSprint]);
 
-  // Construcción de la lista de fases para el Timeline
   const fases: FaseInfo[] = [
     {
       key: "mapeo",
@@ -77,42 +76,16 @@ export function useDesignSprint(sprintId: string) {
 
   const registrarMapeo = async (
     data: { proyecto_problema: string; proyecto_objective: string; enfoque: string },
-    files: File[]
+    files: File[] = []
   ) => {
     setLoading(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("proyecto_problema", data.proyecto_problema);
-      formData.append("proyecto_objective", data.proyecto_objective);
-      formData.append("enfoque", data.enfoque);
-
-      files.forEach((file) => formData.append("archivos", file));
-
-      await fetchApiForm(`/design-sprint/${sprintId}/mapeo`, formData);
+      await DesignSprintService.registrarMapeo(sprintId, data, files);
       await cargarSprint();
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ CORREGIDO: Recibe usuId por parámetro y actualiza el sprint
-  const puntuarBoceto = async (bocetoId: string, usuId: number, valor: number = 1) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await fetchApi(`/design-sprint/${sprintId}/boceto/${bocetoId}/puntuacion`, {
-        method: "POST",
-        body: JSON.stringify({
-          usu_id: Number(usuId),
-          valor: valor,
-        }),
-      });
-      await cargarSprint();
-    } catch (err: any) {
-      setError(err.message || "Error al votar por el boceto");
+      setError(err?.message || "Error al registrar la fase de Mapeo");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -120,7 +93,7 @@ export function useDesignSprint(sprintId: string) {
 
   const registrarBoceto = async (
     data: { propuesta: string; usu_id: number },
-    files: File[]
+    files: File[] = []
   ) => {
     setLoading(true);
     setError(null);
@@ -130,16 +103,43 @@ export function useDesignSprint(sprintId: string) {
         throw new Error("El ID de usuario no es válido para registrar el boceto.");
       }
 
-      const formData = new FormData();
-      formData.append("propuesta", data.propuesta);
-      formData.append("usu_id", String(numericUsuId));
-
-      files.forEach((file) => formData.append("archivos", file));
-
-      await fetchApiForm(`/design-sprint/${sprintId}/boceto`, formData);
+      await DesignSprintService.registrarBoceto(
+        sprintId,
+        { propuesta: data.propuesta, usu_id: numericUsuId },
+        files
+      );
       await cargarSprint();
     } catch (err: any) {
-      setError(err.message);
+      setError(err?.message || "Error al guardar el boceto");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const puntuarBoceto = async (
+    bocetoId: string,
+    usuId: number,
+    valor: number = 1,
+    comentario?: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const numericUsuId = Number(usuId);
+      if (isNaN(numericUsuId) || numericUsuId <= 0) {
+        throw new Error("El ID de usuario no es válido para votar.");
+      }
+
+      await DesignSprintService.puntuarBoceto(sprintId, bocetoId, {
+        usu_id: numericUsuId,
+        valor,
+        comentario,
+      });
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err?.message || "Error al votar por el boceto");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -147,21 +147,51 @@ export function useDesignSprint(sprintId: string) {
 
   const registrarPrototipo = async (
     data: { nombre_prototipo: string; descripcion: string },
-    files: File[]
+    files: File[] = []
   ) => {
     setLoading(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("nombre_prototipo", data.nombre_prototipo);
-      formData.append("descripcion", data.descripcion);
-
-      files.forEach((file) => formData.append("archivos", file));
-
-      await fetchApiForm(`/design-sprint/${sprintId}/prototipo`, formData);
+      await DesignSprintService.registrarPrototipo(sprintId, data, files);
       await cargarSprint();
     } catch (err: any) {
-      setError(err.message);
+      setError(err?.message || "Error al registrar el prototipo");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const agregarComentarioDocente = async (
+    fase: FaseKey,
+    comentario: string,
+    usuId: number,
+    bocetoId?: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const numericUsuId = Number(usuId);
+      if (isNaN(numericUsuId) || numericUsuId <= 0) {
+        throw new Error("Se requiere un ID de usuario/docente válido para comentar.");
+      }
+
+      if (fase === "mapeo") {
+        await DesignSprintService.agregarComentarioMapeo(sprintId, comentario, numericUsuId);
+      } else if (fase === "boceto") {
+        if (!bocetoId) {
+          throw new Error("Se requiere un ID de boceto válido para dejar un comentario.");
+        }
+        await DesignSprintService.agregarComentarioBoceto(sprintId, bocetoId, comentario, numericUsuId);
+      } else if (fase === "prototipo") {
+        await DesignSprintService.agregarComentarioPrototipo(sprintId, comentario, numericUsuId);
+      } else {
+        await DesignSprintService.agregarComentarioGeneral(sprintId, comentario, numericUsuId);
+      }
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err?.message || "Error al guardar el comentario del docente");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -172,9 +202,11 @@ export function useDesignSprint(sprintId: string) {
     fases,
     loading,
     error,
+    refetch: cargarSprint,
     registrarMapeo,
     registrarBoceto,
-    puntuarBoceto, // 👈 Importante: Agregado al return
+    puntuarBoceto,
     registrarPrototipo,
+    agregarComentarioDocente,
   };
 }
