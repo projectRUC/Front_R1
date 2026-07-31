@@ -74,11 +74,12 @@ export const AlumnosDirectoryView: React.FC = () => {
       {/* Barra de Herramientas y Filtros */}
       <div className="flex flex-col md:flex-row items-end gap-4 p-4 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800">
         
-        <div className="flex-1 min-w-[200px]">
+        <div className="w-full md:flex-1 md:min-w-[300px]">
           <Input
             placeholder="Buscar por nombre del alumno..."
             value={filters.buscar}
             onChange={(e) => updateFilter('buscar', e.target.value)}
+            className="w-full text-ellipsis"
           />
         </div>
 
