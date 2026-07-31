@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 
 export interface Herramienta {
   id?: string;
-  proyecto_id: number;
+  proyecto_id: string | undefined;
   nombre_herra: string;
   descripcion: string;
   uso: string;
@@ -15,7 +15,7 @@ export interface Herramienta {
 }
 
 interface HerramientasTableProps {
-  proyectoId: string | number;
+  proyectoId: string | null | undefined ;
   userRol?: string;
 }
 

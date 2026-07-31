@@ -7,7 +7,6 @@ import { dashboardService, DetalleProyectoEquipoResponse, ActividadProyectoItem 
 import { useUser } from '@/context/UserContext';
 import { Loader } from '@/components/Loader';
 import { HerramientasEvaluadasTable } from '@/app/herramientas/components/HerramientasEvaluadasTable';
-import { DocenteFeedbackBox } from '@/app/herramientas/components/DocenteFeedbackBox';
 import DesignSprintGate from '@/app/designSprint/DesignSprintGate';
 import { kanbanService } from '@/services/kanban.service';
 import { DocenteParcialApprovalBar } from '@/components/Projects/DocenteParcialApprovalBar';
@@ -899,6 +898,7 @@ function ProyectoDetalleContent() {
     eqId={Number(equipoId)}
     proyectoId={Number(proyecto.id)}
     usuId={user?.id ?? 0}
+    esDocente={user?.rol === 'Docente'}
   />
 )}
 
@@ -1135,8 +1135,7 @@ function ProyectoDetalleContent() {
             transition={{ duration: 0.2 }}
             className="space-y-8"
           >
-            <HerramientasEvaluadasTable proyectoId={proyecto.id} userRol={user?.rol || ''} />
-            <DocenteFeedbackBox designSprintId={proyecto.id} userRol={user?.rol || ''} />
+            <HerramientasEvaluadasTable proyectoId={proyecto.mongoId} userRol={user?.rol || ''} />
           </motion.div>
         )}
       </AnimatePresence>

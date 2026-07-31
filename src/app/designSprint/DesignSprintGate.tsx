@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { DesignSprintService } from "./services/designSprintApi";
 import DesignSprintPage from "./page";
@@ -7,9 +8,10 @@ interface Props {
   eqId: number;
   proyectoId: number;
   usuId: number;
+  esDocente?: boolean;
 }
 
-export default function DesignSprintGate({ eqId, proyectoId, usuId }: Props) {
+export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = false }: Props) {
   const [sprintId, setSprintId] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(true);
   const [creando, setCreando] = useState(false);
@@ -26,11 +28,9 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId }: Props) {
         String(proyectoId)
       );
 
-      // CORRECCIÓN: Se evalúa si la respuesta devuelve un sprint válido
       if (sprint && sprint._id) {
         setSprintId(sprint._id);
       } else {
-        // Si el backend devuelve null o un objeto sin _id
         setNoExiste(true);
       }
     } catch (e: any) {
@@ -114,5 +114,5 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId }: Props) {
     );
   }
 
-  return <DesignSprintPage sprintId={sprintId} usuId={usuId} />;
+  return <DesignSprintPage sprintId={sprintId} usuId={usuId} esDocente={esDocente} />;
 }
