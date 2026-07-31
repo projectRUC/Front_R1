@@ -57,7 +57,7 @@ export const SidebarContainer: React.FC = () => {
     },
     {
       label: 'Alumnos',
-      href: '/dashboard/alumnos',
+      href: '/alumnos',
       icon: 'solar:user-id-bold-duotone',
       visible: isDocente,
     }
