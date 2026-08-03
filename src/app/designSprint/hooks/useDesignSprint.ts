@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { SprintDesign } from "@/types/designSprint";
 import { DesignSprintService } from "../services/designSprintApi";
 
-export type FaseKey = "mapeo" | "boceto" | "decidir" | "prototipo";
+export type FaseKey = "mapeo" | "boceto" | "decidir" | "prototipo" | "test";
 
 export interface FaseInfo {
   key: FaseKey;
@@ -15,6 +15,9 @@ export function useDesignSprint(sprintId: string) {
   const [sprint, setSprint] = useState<SprintDesign | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Obtener el ID objetivo (Prioriza la _id de MongoDB del sprint cargado si existe)
+  const targetId = sprint?._id || (sprint as any)?.id || sprintId;
 
   const cargarSprint = useCallback(async () => {
     if (!sprintId) return;
@@ -72,6 +75,19 @@ export function useDesignSprint(sprintId: string) {
         ? "en_progreso"
         : "bloqueada",
     },
+    {
+      key: "test",
+      dia: "Viernes",
+      nombre: "Validar",
+      estado:
+        (sprint as any)?.test?.hallazgos ||
+        ((sprint as any)?.test?.archivos && (sprint as any).test.archivos.length > 0) ||
+        sprint?.vobo
+          ? "completada"
+          : sprint?.status === "test" || sprint?.status === "vobo" || sprint?.status === "prototipo_completado"
+          ? "en_progreso"
+          : "bloqueada",
+    },
   ];
 
   const registrarMapeo = async (
@@ -81,7 +97,7 @@ export function useDesignSprint(sprintId: string) {
     setLoading(true);
     setError(null);
     try {
-      await DesignSprintService.registrarMapeo(sprintId, data, files);
+      await DesignSprintService.registrarMapeo(targetId, data, files);
       await cargarSprint();
     } catch (err: any) {
       setError(err?.message || "Error al registrar la fase de Mapeo");
@@ -104,7 +120,7 @@ export function useDesignSprint(sprintId: string) {
       }
 
       await DesignSprintService.registrarBoceto(
-        sprintId,
+        targetId,
         { propuesta: data.propuesta, usu_id: numericUsuId },
         files
       );
@@ -131,7 +147,7 @@ export function useDesignSprint(sprintId: string) {
         throw new Error("El ID de usuario no es válido para votar.");
       }
 
-      await DesignSprintService.puntuarBoceto(sprintId, bocetoId, {
+      await DesignSprintService.puntuarBoceto(targetId, bocetoId, {
         usu_id: numericUsuId,
         valor,
         comentario,
@@ -152,10 +168,34 @@ export function useDesignSprint(sprintId: string) {
     setLoading(true);
     setError(null);
     try {
-      await DesignSprintService.registrarPrototipo(sprintId, data, files);
+      await DesignSprintService.registrarPrototipo(targetId, data, files);
       await cargarSprint();
     } catch (err: any) {
       setError(err?.message || "Error al registrar el prototipo");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registrarTest = async (
+    data: { hallazgos: string; conclusion: string; puntuacion_general?: number },
+    files: File[] = []
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (typeof (DesignSprintService as any).registrarTest === "function") {
+        await (DesignSprintService as any).registrarTest(targetId, data, files);
+      } else {
+        await DesignSprintService.actualizarVoBo(targetId, {
+          comentarios_viabilidad: `Hallazgos: ${data.hallazgos}\nConclusión: ${data.conclusion}`,
+          dictamen: data.puntuacion_general ? `Puntuación: ${data.puntuacion_general}/100` : undefined,
+        });
+      }
+      await cargarSprint();
+    } catch (err: any) {
+      setError(err?.message || "Error al registrar la fase de Validar/Test");
       throw err;
     } finally {
       setLoading(false);
@@ -177,16 +217,22 @@ export function useDesignSprint(sprintId: string) {
       }
 
       if (fase === "mapeo") {
-        await DesignSprintService.agregarComentarioMapeo(sprintId, comentario, numericUsuId);
+        await DesignSprintService.agregarComentarioMapeo(targetId, comentario, numericUsuId);
       } else if (fase === "boceto") {
         if (!bocetoId) {
           throw new Error("Se requiere un ID de boceto válido para dejar un comentario.");
         }
-        await DesignSprintService.agregarComentarioBoceto(sprintId, bocetoId, comentario, numericUsuId);
+        await DesignSprintService.agregarComentarioBoceto(targetId, bocetoId, comentario, numericUsuId);
       } else if (fase === "prototipo") {
-        await DesignSprintService.agregarComentarioPrototipo(sprintId, comentario, numericUsuId);
+        await DesignSprintService.agregarComentarioPrototipo(targetId, comentario, numericUsuId);
+      } else if (fase === "test") {
+        if (typeof (DesignSprintService as any).agregarComentarioTest === "function") {
+          await (DesignSprintService as any).agregarComentarioTest(targetId, comentario, numericUsuId);
+        } else {
+          await DesignSprintService.agregarComentarioGeneral(targetId, comentario, numericUsuId);
+        }
       } else {
-        await DesignSprintService.agregarComentarioGeneral(sprintId, comentario, numericUsuId);
+        await DesignSprintService.agregarComentarioGeneral(targetId, comentario, numericUsuId);
       }
       await cargarSprint();
     } catch (err: any) {
@@ -207,6 +253,7 @@ export function useDesignSprint(sprintId: string) {
     registrarBoceto,
     puntuarBoceto,
     registrarPrototipo,
+    registrarTest,
     agregarComentarioDocente,
   };
 }
