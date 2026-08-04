@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardHeader, CardContent, Spinner, Chip, Progress } from "@heroui/react";
+import { Card, CardHeader, CardContent, Spinner, Chip } from "@heroui/react";
 import { fetchApi } from "@/services/api";
-import { EstatusActividad } from "@/types/actividad";
 
 export const PersonalDashboardView = () => {
   const [data, setData] = useState<any>(null);
@@ -27,7 +26,7 @@ export const PersonalDashboardView = () => {
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <Spinner size="lg" label="Cargando tus métricas..." />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -94,20 +93,20 @@ export const PersonalDashboardView = () => {
             <h3 className="text-lg font-semibold">Tu Progreso</h3>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center gap-4 py-8">
-            <Progress 
-              size="lg"
-              radius="md"
-              classNames={{
-                base: "max-w-md",
-                track: "drop-shadow-md border border-default",
-                indicator: "bg-gradient-to-r from-pink-500 to-yellow-500",
-                label: "tracking-wider font-medium text-default-600",
-                value: "text-foreground/60",
-              }}
-              label="Avance de responsabilidades asignadas"
-              value={data?.porcentajeAvance || 0}
-              showValueLabel={true}
-            />
+            <div className="w-full max-w-md space-y-2">
+              <div className="flex justify-between items-center text-sm font-medium text-gray-700 dark:text-zinc-300">
+                <span>Avance de responsabilidades asignadas</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                  {Math.round(data?.porcentajeAvance || 0)}%
+                </span>
+              </div>
+              <div className="w-full h-4 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden shadow-inner">
+                <div
+                  className="h-full bg-gradient-to-r from-pink-500 to-amber-500 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min(Math.max(data?.porcentajeAvance || 0, 0), 100)}%` }}
+                />
+              </div>
+            </div>
             <p className="text-sm text-default-500 mt-2">
               Basado en los Story Points / Horas estimadas.
             </p>
@@ -129,7 +128,7 @@ export const PersonalDashboardView = () => {
                         Vence: {act.fechaFin ? new Date(act.fechaFin).toLocaleDateString() : 'Sin fecha'} | {act.estimacion} SP
                       </span>
                     </div>
-                    <Chip size="sm" color={getStatusColor(act.estatus) as any} variant="flat">
+                    <Chip size="sm" color={getStatusColor(act.estatus) as any} variant="soft">
                       {act.estatus}
                     </Chip>
                   </div>

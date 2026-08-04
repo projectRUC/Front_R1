@@ -44,7 +44,7 @@ export const ScrumMasterDashboardView: React.FC<ScrumMasterDashboardViewProps> =
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <Spinner size="lg" label="Cargando métricas del Sprint..." />
+        <Spinner size="lg" />
       </div>
     );
   }

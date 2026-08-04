@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Card,
   CardHeader,
@@ -8,13 +8,19 @@ import {
 } from '@heroui/react';
 import Link from 'next/link';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { authService } from '@/services/auth.service';
+import { perfilService, GrupoItem } from '@/services/perfil.service';
 import { isValidName, isValidEmail, isStrongPassword } from '@/utils/validations';
 
 export default function RegisterPage() {
   const [nombre, setNombre] = useState('');
-  const [apellidos, setApellidos] = useState('');
+  const [apellidoPaterno, setApellidoPaterno] = useState('');
+  const [apellidoMaterno, setApellidoMaterno] = useState('');
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
+  const [grupoId, setGrupoId] = useState('');
+  const [grupos, setGrupos] = useState<GrupoItem[]>([]);
+  const [isLoadingGrupos, setIsLoadingGrupos] = useState(true);
   
   // Estado para LGPDPPSO - Consentimiento explícito
   const [isPrivacyAccepted, setIsPrivacyAccepted] = useState(false);
@@ -22,37 +28,70 @@ export default function RegisterPage() {
   
   // Referencias para validación nativa HTML5
   const nameRef = useRef<HTMLInputElement>(null);
-  const lastNameRef = useRef<HTMLInputElement>(null);
+  const apellidoPaternoRef = useRef<HTMLInputElement>(null);
+  const apellidoMaternoRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const groupRef = useRef<HTMLSelectElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
   
   const { register, isLoading, error } = useAuth();
+
+  // Cargar lista de grupos escolares con nombre
+  useEffect(() => {
+    const loadGrupos = async () => {
+      setIsLoadingGrupos(true);
+      try {
+        // Intentar endpoint público de grupos para registro
+        const data = await authService.getGrupos();
+        if (Array.isArray(data) && data.length > 0) {
+          setGrupos(data);
+        } else {
+          // Fallback a perfilService
+          const perfilGrupos = await perfilService.getGrupos().catch(() => []);
+          if (Array.isArray(perfilGrupos) && perfilGrupos.length > 0) {
+            setGrupos(perfilGrupos);
+          }
+        }
+      } catch {
+        const perfilGrupos = await perfilService.getGrupos().catch(() => []);
+        if (Array.isArray(perfilGrupos) && perfilGrupos.length > 0) {
+          setGrupos(perfilGrupos);
+        }
+      } finally {
+        setIsLoadingGrupos(false);
+      }
+    };
+    loadGrupos();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Limpiar validaciones previas
     nameRef.current?.setCustomValidity('');
-    lastNameRef.current?.setCustomValidity('');
+    apellidoPaternoRef.current?.setCustomValidity('');
+    apellidoMaternoRef.current?.setCustomValidity('');
     emailRef.current?.setCustomValidity('');
     passwordRef.current?.setCustomValidity('');
+    groupRef.current?.setCustomValidity('');
     privacyRef.current?.setCustomValidity('');
     
     const trimmedNombre = nombre.trim();
-    const trimmedApellidos = apellidos.trim();
+    const trimmedApellidoPaterno = apellidoPaterno.trim();
+    const trimmedApellidoMaterno = apellidoMaterno.trim();
     const trimmedCorreo = correo.trim();
     const cleanPassword = password.replace(/\s/g, ''); // Sin espacios
 
-    // Verificamos campos vacíos (aunque 'required' nativo detiene la mayoría, esto atrapa puros espacios)
+    // Verificamos campos vacíos
     if (!trimmedNombre) {
       nameRef.current?.setCustomValidity('Por favor, llena este campo con información válida.');
       nameRef.current?.reportValidity();
       return;
     }
-    if (!trimmedApellidos) {
-      lastNameRef.current?.setCustomValidity('Por favor, llena este campo con información válida.');
-      lastNameRef.current?.reportValidity();
+    if (!trimmedApellidoPaterno) {
+      apellidoPaternoRef.current?.setCustomValidity('Por favor, ingresa tu apellido paterno.');
+      apellidoPaternoRef.current?.reportValidity();
       return;
     }
     if (!trimmedCorreo) {
@@ -72,9 +111,14 @@ export default function RegisterPage() {
       nameRef.current?.reportValidity();
       return;
     }
-    if (!isValidName(trimmedApellidos)) {
-      lastNameRef.current?.setCustomValidity("Los apellidos solo deben contener letras.");
-      lastNameRef.current?.reportValidity();
+    if (!isValidName(trimmedApellidoPaterno)) {
+      apellidoPaternoRef.current?.setCustomValidity("El apellido paterno solo debe contener letras.");
+      apellidoPaternoRef.current?.reportValidity();
+      return;
+    }
+    if (trimmedApellidoMaterno && !isValidName(trimmedApellidoMaterno)) {
+      apellidoMaternoRef.current?.setCustomValidity("El apellido materno solo debe contener letras.");
+      apellidoMaternoRef.current?.reportValidity();
       return;
     }
 
@@ -91,6 +135,14 @@ export default function RegisterPage() {
       passwordRef.current?.reportValidity();
       return;
     }
+
+    // Validación de Grupo Escolar
+    const parsedGrupoId = Number(grupoId);
+    if (!grupoId || isNaN(parsedGrupoId) || parsedGrupoId <= 0) {
+      groupRef.current?.setCustomValidity('Por favor, selecciona o ingresa tu grupo escolar.');
+      groupRef.current?.reportValidity();
+      return;
+    }
     
     // Validación de Aviso de Privacidad
     if (!isPrivacyAccepted) {
@@ -99,13 +151,15 @@ export default function RegisterPage() {
       return;
     }
     
-    // El backend espera: nombre, apellidoPaterno, correo, password, rolId
+    // El backend espera: nombre, apellidoPaterno, apellidoMaterno, correo, password, rolId, grupoId
     register({
       nombre: trimmedNombre,
-      apellidoPaterno: trimmedApellidos,
+      apellidoPaterno: trimmedApellidoPaterno,
+      apellidoMaterno: trimmedApellidoMaterno || undefined,
       correo: trimmedCorreo,
       password: cleanPassword,
-      rolId: 1
+      rolId: 1,
+      grupoId: parsedGrupoId,
     });
   };
 
@@ -122,30 +176,50 @@ export default function RegisterPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5 w-full">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Nombre(s) <span className="text-red-500">*</span>
+            </label>
+            <input
+              ref={nameRef}
+              required
+              placeholder="Ej. Juan Carlos"
+              value={nombre}
+              onChange={(e) => {
+                setNombre(e.target.value);
+                e.target.setCustomValidity('');
+              }}
+              className="w-full h-12 px-4 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white shadow-sm"
+            />
+          </div>
+
           <div className="flex gap-4">
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Nombre</label>
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Apellido Paterno <span className="text-red-500">*</span>
+              </label>
               <input
-                ref={nameRef}
+                ref={apellidoPaternoRef}
                 required
-                placeholder="Ej. Juan"
-                value={nombre}
+                placeholder="Ej. Pérez"
+                value={apellidoPaterno}
                 onChange={(e) => {
-                  setNombre(e.target.value);
+                  setApellidoPaterno(e.target.value);
                   e.target.setCustomValidity('');
                 }}
                 className="w-full h-12 px-4 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white shadow-sm"
               />
             </div>
             <div className="flex flex-col gap-1.5 w-full">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Apellidos</label>
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Apellido Materno
+              </label>
               <input
-                ref={lastNameRef}
-                required
-                placeholder="Ej. Pérez"
-                value={apellidos}
+                ref={apellidoMaternoRef}
+                placeholder="Ej. Gómez (opcional)"
+                value={apellidoMaterno}
                 onChange={(e) => {
-                  setApellidos(e.target.value);
+                  setApellidoMaterno(e.target.value);
                   e.target.setCustomValidity('');
                 }}
                 className="w-full h-12 px-4 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white shadow-sm"
@@ -167,6 +241,43 @@ export default function RegisterPage() {
               }}
               className="w-full h-12 px-4 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white shadow-sm"
             />
+          </div>
+
+          {/* Campo Grupo Escolar */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Grupo Escolar <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                ref={groupRef}
+                required
+                disabled={isLoadingGrupos && grupos.length === 0}
+                value={grupoId}
+                onChange={(e) => {
+                  setGrupoId(e.target.value);
+                  e.target.setCustomValidity('');
+                }}
+                className="w-full h-12 px-4 pr-10 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-gray-900 dark:text-white shadow-sm cursor-pointer appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {isLoadingGrupos ? 'Cargando grupos escolares...' : 'Selecciona tu grupo escolar...'}
+                </option>
+                {grupos.map((g) => (
+                  <option key={g.grupoId} value={g.grupoId}>
+                    {g.grupoNom} {g.grupoDesc ? `— ${g.grupoDesc}` : ''}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Selecciona el grupo académico al que perteneces
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -224,7 +335,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-4 w-full h-12 bg-primary hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-70 disabled:hover:scale-100"
+            className="mt-4 w-full h-12 bg-primary hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-70 disabled:hover:scale-100 cursor-pointer"
           >
             {isLoading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -278,7 +389,7 @@ export default function RegisterPage() {
               <button 
                 type="button" 
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-800 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 Cerrar
               </button>
@@ -288,7 +399,7 @@ export default function RegisterPage() {
                   setIsPrivacyAccepted(true); 
                   setIsModalOpen(false); 
                 }}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-600 transition-colors shadow-md shadow-primary/20"
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-600 transition-colors shadow-md shadow-primary/20 cursor-pointer"
               >
                 Entendido y Aceptar
               </button>

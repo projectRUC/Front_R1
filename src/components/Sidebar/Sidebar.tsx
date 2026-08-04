@@ -86,6 +86,16 @@ export const Sidebar: React.FC = () => {
       ),
       visible: isDocente,
     },
+    {
+      label: 'Mi Perfil y ARCO',
+      href: '/perfil',
+      icon: (
+        <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      visible: true,
+    },
   ];
 
   // Durante la hidratación en SSR se renderiza solo el ítem predeterminado invariable para paridad DOM
@@ -172,12 +182,16 @@ export const Sidebar: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+              <Link
+                href="/perfil"
+                className="flex items-center space-x-3 p-1 -m-1 rounded-xl hover:bg-gray-200/50 dark:hover:bg-zinc-700/50 transition-colors group"
+                title="Ir a mi perfil"
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0 group-hover:scale-105 transition-transform">
                   {user?.nombre ? user.nombre.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {user?.nombre || 'Usuario Activo'}
                   </p>
                   <div className="flex items-center space-x-1.5 mt-0.5">
@@ -187,7 +201,7 @@ export const Sidebar: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Botón Cerrar Sesión */}
               <button

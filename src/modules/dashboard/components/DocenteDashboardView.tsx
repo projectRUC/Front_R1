@@ -39,7 +39,7 @@ export const DocenteDashboardView = () => {
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <Spinner size="lg" label="Cargando métricas del docente..." />
+        <Spinner size="lg" />
       </div>
     );
   }
