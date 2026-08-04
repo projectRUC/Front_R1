@@ -6,6 +6,9 @@ export interface UserProfile {
   correo: string;
   rol: "Alumno" | "Scrum Master" | "Docente" | string;
   grupo?: string | null;
+  grupoId?: number;
+  estadoCuenta?: 'ACTIVO' | 'INACTIVO' | 'ANONIMIZADO';
+  oposicionTratamiento?: boolean;
 }
 
 export interface ProyectoCard {

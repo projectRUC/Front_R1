@@ -43,7 +43,7 @@ export const SprintMetricsView = ({ equipoId }: { equipoId: number }) => {
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <Spinner size="lg" label="Calculando métricas del Sprint..." />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -151,13 +151,13 @@ export const SprintMetricsView = ({ equipoId }: { equipoId: number }) => {
                     fill="#8884d8"
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    label={({ name, percent }: any) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                   >
                     {pieData.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [`${value} SP`, 'Asignados']} />
+                  <Tooltip formatter={(value: any) => [`${value} SP`, 'Asignados']} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

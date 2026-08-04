@@ -5,11 +5,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAccountPaused, setIsAccountPaused] = useState(false);
   const router = useRouter();
 
   const login = async (correo: string, password: string) => {
     setIsLoading(true);
     setError(null);
+    setIsAccountPaused(false);
     try {
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
@@ -21,11 +23,27 @@ export const useAuth = () => {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         let errorMsg = data.message || "Error al iniciar sesión";
         if (Array.isArray(errorMsg)) {
           errorMsg = errorMsg[0];
         }
+
+        // Detección de cuenta pausada / inactiva
+        if (
+          res.status === 403 ||
+          data.error === "ACCOUNT_PAUSED" ||
+          (typeof errorMsg === "string" &&
+            (errorMsg.includes("pausada") ||
+              errorMsg.includes("inactiva") ||
+              errorMsg.includes("ACCOUNT_PAUSED")))
+        ) {
+          setIsAccountPaused(true);
+          const err = new Error(errorMsg);
+          (err as any).code = "ACCOUNT_PAUSED";
+          throw err;
+        }
+
         throw new Error(errorMsg);
       }
 
@@ -36,7 +54,45 @@ export const useAuth = () => {
 
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado al iniciar sesión.");
+      if (err.code !== "ACCOUNT_PAUSED") {
+        setError(err.message || "Ocurrió un error inesperado al iniciar sesión.");
+      }
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const reactivarYLogin = async (correo: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/reactivar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ correo: correo.trim().toLowerCase(), password }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        let errorMsg = data.message || "Error al reactivar la cuenta";
+        if (Array.isArray(errorMsg)) {
+          errorMsg = errorMsg[0];
+        }
+        throw new Error(errorMsg);
+      }
+
+      document.cookie =
+        "is_logged_in=true; path=/; max-age=28800; samesite=lax";
+
+      setIsAccountPaused(false);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Ocurrió un error al reactivar la cuenta.");
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +117,7 @@ export const useAuth = () => {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         let errorMsg = data.message || "Error al registrarse";
         if (Array.isArray(errorMsg)) {
           errorMsg = errorMsg[0];
@@ -80,8 +136,7 @@ export const useAuth = () => {
   const logout = async () => {
     setIsLoading(true);
     
-    // 1. SIEMPRE primero borramos la cookie local del frontend (Next.js) en su propio bloque aislado.
-    // Esto garantiza que la sesión se cierre en el navegador incluso si el backend NestJS está apagado o falla.
+    // 1. Limpiar cookie local de Next.js
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -90,32 +145,35 @@ export const useAuth = () => {
       console.warn("Advertencia al limpiar cookies en ruta local de Next.js:", err);
     }
 
-    // 2. Notificamos al backend NestJS para limpiar la sesión en servidor (silencioso en fallo de red/servidor apagado)
+    // 2. Notificar al backend NestJS para limpiar la sesión
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
     } catch {
-      // Si el backend no está corriendo en localhost:4000 o se está reiniciando, el cierre de sesión local de Next.js procede normalmente de forma silenciosa.
+      // Ignorar si el backend no responde
     }
 
-    // 3. Limpiamos exhaustivamente cualquier cookie desde el cliente JS combinando directivas
+    // 3. Limpiar exhaustivamente cookies en el cliente JS
     document.cookie = "is_logged_in=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
     document.cookie = "access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
     document.cookie = "access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict";
 
     setIsLoading(false);
     
-    // 4. Redireccionamos directamente al login reemplazando el historial para no dejar ciclos de retroceso
+    // 4. Redirección limpia al login
     window.location.replace("/login");
   };
 
   return {
     login,
+    reactivarYLogin,
     register: registerUser,
     logout,
     isLoading,
     error,
+    isAccountPaused,
+    setIsAccountPaused,
   };
 };

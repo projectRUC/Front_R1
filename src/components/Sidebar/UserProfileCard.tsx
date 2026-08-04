@@ -1,5 +1,5 @@
 import React from 'react';
-
+import Link from 'next/link';
 
 interface UserProfileCardProps {
   user: any;
@@ -25,14 +25,18 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, loading 
   const isNameLong = userName.length > 18;
 
   return (
-    <div className="p-4 mx-4 mt-2 mb-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200/60 dark:border-zinc-700/50 shadow-inner flex-shrink-0">
+    <Link
+      href="/perfil"
+      className="block p-4 mx-4 mt-2 mb-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-200/60 dark:border-zinc-700/50 shadow-inner flex-shrink-0 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors group"
+      title="Ir a Ajustes de Perfil y Derechos ARCO"
+    >
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0 uppercase">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0 uppercase group-hover:scale-105 transition-transform">
           {userName.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
           <p 
-            className="text-sm font-bold text-gray-900 dark:text-white truncate cursor-default"
+            className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
             title={isNameLong ? userName : undefined}
           >
             {userName}
@@ -46,6 +50,6 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({ user, loading 
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };

@@ -18,7 +18,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, CardHeader, CardContent, Spinner, Avatar, Chip } from "@heroui/react";
+import { Card, CardHeader, CardContent, Spinner, Chip } from "@heroui/react";
 import { fetchApi } from "@/services/api";
 
 const COLUMNS = {
@@ -63,7 +63,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, item }) => {
         <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 line-clamp-2">
           {item.nombre}
         </h4>
-        <Chip size="sm" variant="flat" color={item.prioridad === 'Alta' ? 'danger' : item.prioridad === 'Media' ? 'warning' : 'default'}>
+        <Chip size="sm" variant="soft" color={item.prioridad === 'Alta' ? 'danger' : item.prioridad === 'Media' ? 'warning' : 'default'}>
           {item.estimacion} SP
         </Chip>
       </div>
@@ -72,7 +72,13 @@ const SortableItem: React.FC<SortableItemProps> = ({ id, item }) => {
         <div className="flex -space-x-2">
           {item.asignados && item.asignados.length > 0 ? (
             item.asignados.map((a: any, i: number) => (
-              <Avatar key={i} size="sm" name={a.usu_nom} className="border-2 border-white dark:border-gray-800" />
+              <div
+                key={i}
+                className="w-6 h-6 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center font-bold border-2 border-white dark:border-gray-800"
+                title={a.usu_nom}
+              >
+                {(a.usu_nom || 'U').charAt(0).toUpperCase()}
+              </div>
             ))
           ) : (
             <span className="text-xs text-gray-400">Sin asignar</span>
@@ -171,8 +177,8 @@ export const KanbanBoardView = ({ equipoId, sprintId = 1 }: { equipoId: number; 
 
   if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Spinner size="lg" label="Cargando Tablero Kanban..." />
+      <div className="flex h-full w-full items-center justify-center p-8">
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -194,7 +200,7 @@ export const KanbanBoardView = ({ equipoId, sprintId = 1 }: { equipoId: number; 
             <div key={key} id={key} className="flex flex-col w-80 shrink-0 bg-default-50 rounded-xl p-4 h-full">
               <h3 className="font-semibold text-gray-700 mb-4 flex items-center justify-between">
                 {title}
-                <Chip size="sm" variant="flat">{board[key]?.length || 0}</Chip>
+                <Chip size="sm" variant="soft">{board[key]?.length || 0}</Chip>
               </h3>
               <SortableContext
                 id={key}
