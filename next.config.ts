@@ -22,6 +22,7 @@ const cspHeader = `
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: 'standalone',
   allowedDevOrigins: ['localhost','192.168.1.90'],
   turbopack: {},
   async headers() {
