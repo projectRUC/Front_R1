@@ -15,6 +15,16 @@ export interface RegisterPayload {
   grupoId: number;
 }
 
+export interface VerificarCodigoPayload {
+  correo: string;
+  codigo: string;
+}
+
+export interface CambiarContrasenaPayload {
+  correo: string;
+  nuevaPassword: string;
+}
+
 export const authService = {
   /**
    * Inicia sesión autenticando credenciales y estableciendo cookie HttpOnly
@@ -51,6 +61,42 @@ export const authService = {
       body: JSON.stringify({
         correo: credentials.correo.trim().toLowerCase(),
         password: credentials.password,
+      }),
+    });
+  },
+
+  /**
+   * Solicita la recuperación de contraseña: genera y envía un código de 6 dígitos al correo (válido 5 min)
+   */
+  async solicitarRecuperacion(correo: string): Promise<{ message: string }> {
+    return fetchApi<{ message: string }>('/auth/recuperacion', {
+      method: 'POST',
+      body: JSON.stringify({ correo: correo.trim().toLowerCase() }),
+    });
+  },
+
+  /**
+   * Verifica el código de 6 dígitos enviado por correo
+   */
+  async verificarCodigo(payload: VerificarCodigoPayload): Promise<{ message: string }> {
+    return fetchApi<{ message: string }>('/auth/verificar-codigo', {
+      method: 'POST',
+      body: JSON.stringify({
+        correo: payload.correo.trim().toLowerCase(),
+        codigo: payload.codigo,
+      }),
+    });
+  },
+
+  /**
+   * Establece la nueva contraseña tras verificar el código de recuperación
+   */
+  async cambiarContrasena(payload: CambiarContrasenaPayload): Promise<{ message: string }> {
+    return fetchApi<{ message: string }>('/auth/cambiar-contrasena', {
+      method: 'POST',
+      body: JSON.stringify({
+        correo: payload.correo.trim().toLowerCase(),
+        nuevaPassword: payload.nuevaPassword,
       }),
     });
   },

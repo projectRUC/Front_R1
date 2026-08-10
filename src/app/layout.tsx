@@ -39,23 +39,26 @@ export default function RootLayout({
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              function checkBFCache() {
-                if (!document.cookie.includes('is_logged_in=')) {
-                   if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
-                     window.location.replace('/login');
-                   }
-                }
-              }
+      function checkBFCache() {
+        const rutasPublicas = ['/login', '/register', '/recuperacion', '/cambioPassword'];
+        const esRutaPublica = rutasPublicas.some((ruta) => window.location.pathname.startsWith(ruta));
 
-              window.addEventListener('pageshow', function(event) {
-                if (event.persisted) {
-                  window.location.reload();
-                }
-              });
+        if (!document.cookie.includes('is_logged_in=')) {
+           if (!esRutaPublica) {
+             window.location.replace('/login');
+           }
+        }
+      }
 
-              window.addEventListener('popstate', checkBFCache);
-              window.addEventListener('focus', checkBFCache);
-            `,
+      window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+          window.location.reload();
+        }
+      });
+
+      window.addEventListener('popstate', checkBFCache);
+      window.addEventListener('focus', checkBFCache);
+    `,
           }}
         />
       </body>
