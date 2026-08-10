@@ -4,17 +4,16 @@ import { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/auth.service'; // ajusta la ruta a donde tengas authService
 
 // Ruta sugerida para este archivo: app/recupracion/page.tsx
-// Esta pantalla solo maneja el paso 1: pedir el correo para continuar la recuperación.
-// La llamada real al backend (enviar código / link de recuperación) queda marcada
-// con un TODO más abajo para conectarla cuando esté lista.
+// Paso 1 del flujo: pide el correo, dispara la recuperación en el backend
+// y navega a la pantalla de verificación del código.
 
 export default function RecuperacionPage() {
   const [correo, setCorreo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [enviado, setEnviado] = useState(false);
   const router = useRouter();
 
   const validarCorreo = (valor: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
@@ -29,15 +28,11 @@ export default function RecuperacionPage() {
     }
 
     setIsLoading(true);
-
-    router.push('/recuperacionCodigo');
-
     try {
-          setEnviado(true);
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      setEnviado(true);
-    } catch {
-      setError('No pudimos procesar tu solicitud. Intenta de nuevo.');
+      await authService.solicitarRecuperacion(correo);
+      router.push(`/recuperacionCodigo?correo=${encodeURIComponent(correo)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No pudimos procesar tu solicitud. Intenta de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -66,88 +61,70 @@ export default function RecuperacionPage() {
           Recuperar Contraseña
         </h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 font-medium text-center">
-          {enviado
-            ? 'Revisa tu bandeja de entrada para continuar'
-            : 'Ingresa tu correo para continuar con la recuperación'}
+          Ingresa tu correo para continuar con la recuperación
         </p>
       </CardHeader>
 
       <CardContent>
-        {enviado ? (
-          <div className="flex flex-col gap-5">
-            <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm font-medium text-center shadow-sm">
-              Si el correo <span className="font-bold">{correo}</span> está registrado, te
-              enviamos las instrucciones para recuperar tu cuenta.
-            </div>
-            <Link
-              href="/login"
-              className="mt-2 w-full h-12 bg-primary hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
-            >
-              Volver al inicio de sesión
-            </Link>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Correo Electrónico
+            </label>
+            <input
+              required
+              type="email"
+              placeholder="tu@escuela.com"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white shadow-sm"
+            />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Correo Electrónico
-              </label>
-              <input
-                required
-                type="email"
-                placeholder="tu@escuela.com"
-                value={correo}
-                onChange={(e) => setCorreo(e.target.value)}
-                className="w-full h-12 px-4 rounded-xl bg-white/90 dark:bg-zinc-800/90 border border-gray-300 dark:border-zinc-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white shadow-sm"
-              />
+
+          {error && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium text-center shadow-sm">
+              {error}
             </div>
+          )}
 
-            {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium text-center shadow-sm">
-                {error}
-              </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-4 w-full h-12 bg-primary hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-70 disabled:hover:scale-100"
+          >
+            {isLoading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : (
+              'Enviar Instrucciones'
             )}
+          </button>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="mt-4 w-full h-12 bg-primary hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-70 disabled:hover:scale-100"
-            >
-              {isLoading ? (
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              ) : (
-                'Enviar Instrucciones'
-
-              )}
-            </button>
-
-            <Link
-              href="/login"
-              className="text-primary hover:text-primary-600 transition-colors font-bold underline decoration-primary/30 underline-offset-4 flex items-center justify-center"
-            >
-              Volver al inicio de sesión
-            </Link>
-          </form>
-        )}
+          <Link
+            href="/login"
+            className="text-primary hover:text-primary-600 transition-colors font-bold underline decoration-primary/30 underline-offset-4 flex items-center justify-center"
+          >
+            Volver al inicio de sesión
+          </Link>
+        </form>
       </CardContent>
     </Card>
   );

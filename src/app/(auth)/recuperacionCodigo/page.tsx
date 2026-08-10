@@ -1,32 +1,31 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { authService } from '@/services/auth.service';
 
 // Ruta sugerida para este archivo: app/recupracion/codigo/page.tsx
 // Segundo paso del flujo de recuperación: el usuario ingresa el código de
 // 6 dígitos que se le envió por correo. El código expira a los 5 minutos.
-// La verificación real y el reenvío quedan marcados con TODO para conectar
-// con el backend cuando esté listo.
 
 const DURACION_SEGUNDOS = 5 * 60; // 5 minutos
 
 export default function VerificarCodigoPage() {
   const searchParams = useSearchParams();
   const correo = searchParams.get('correo') || 'tu correo electrónico';
+  const router = useRouter();
 
   const [digitos, setDigitos] = useState<string[]>(Array(6).fill(''));
   const [isLoading, setIsLoading] = useState(false);
+  const [isReenviando, setIsReenviando] = useState(false);
   const [error, setError] = useState('');
   const [segundosRestantes, setSegundosRestantes] = useState(DURACION_SEGUNDOS);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   const expirado = segundosRestantes <= 0;
   const codigoCompleto = digitos.every((d) => d !== '');
-  const router =  useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -84,10 +83,8 @@ export default function VerificarCodigoPage() {
 
     setIsLoading(true);
     try {
-
-        router.push("/cambioPassword")
-
-      await new Promise((resolve) => setTimeout(resolve, 900));
+      await authService.verificarCodigo({ correo, codigo: digitos.join('') });
+      router.push(`/cambioPassword?correo=${encodeURIComponent(correo)}`);
     } catch {
       setError('Código incorrecto. Intenta de nuevo.');
     } finally {
@@ -96,13 +93,18 @@ export default function VerificarCodigoPage() {
   };
 
   const handleReenviar = async () => {
-    // TODO: conectar con la API de reenvío, ej:
-    // await reenviarCodigo(correo);
-    
-    setDigitos(Array(6).fill(''));
     setError('');
-    setSegundosRestantes(DURACION_SEGUNDOS);
-    inputsRef.current[0]?.focus();
+    setIsReenviando(true);
+    try {
+      await authService.solicitarRecuperacion(correo);
+      setDigitos(Array(6).fill(''));
+      setSegundosRestantes(DURACION_SEGUNDOS);
+      inputsRef.current[0]?.focus();
+    } catch {
+      setError('No pudimos reenviar el código. Intenta de nuevo.');
+    } finally {
+      setIsReenviando(false);
+    }
   };
 
   return (
@@ -208,10 +210,10 @@ export default function VerificarCodigoPage() {
           <button
             type="button"
             onClick={handleReenviar}
-            disabled={!expirado}
+            disabled={!expirado || isReenviando}
             className="text-primary hover:text-primary-600 transition-colors font-bold underline decoration-primary/30 underline-offset-4 text-center disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
           >
-            Reenviar código
+            {isReenviando ? 'Reenviando...' : 'Reenviar código'}
           </button>
 
           <Link

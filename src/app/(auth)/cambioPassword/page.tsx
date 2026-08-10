@@ -3,15 +3,19 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { authService } from '@/services/auth.service';
 
 // Ruta sugerida para este archivo: app/recupracion/nueva-contrasena/page.tsx
 // Último paso del flujo de recuperación: el usuario define su nueva contraseña.
-// La llamada real al backend queda marcada con TODO para conectarla cuando esté lista.
+// Lee el correo por query param (viene de la pantalla de verificación de código).
 
 const MIN_LARGO = 8;
 
 export default function NuevaContrasenaPage() {
+  const searchParams = useSearchParams();
+  const correo = searchParams.get('correo') || '';
+
   const [password, setPassword] = useState('');
   const [confirmacion, setConfirmacion] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
@@ -19,7 +23,6 @@ export default function NuevaContrasenaPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [actualizada, setActualizada] = useState(false);
-  const route = useRouter();
 
   const validar = () => {
     if (password.length < MIN_LARGO) {
@@ -39,10 +42,7 @@ export default function NuevaContrasenaPage() {
 
     setIsLoading(true);
     try {
-      // TODO: conectar con la API de cambio de contraseña, ej:
-      // await cambiarContrasena(token, password);
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      route.push("/login")
+      await authService.cambiarContrasena({ correo, nuevaPassword: password });
       setActualizada(true);
     } catch {
       setError('No pudimos actualizar tu contraseña. Intenta de nuevo.');
