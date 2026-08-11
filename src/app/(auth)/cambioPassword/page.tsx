@@ -11,8 +11,9 @@ import { authService } from '@/services/auth.service';
 // Lee el correo por query param (viene de la pantalla de verificación de código).
 
 const MIN_LARGO = 8;
+import { Suspense } from 'react';
 
-export default function NuevaContrasenaPage() {
+function NuevaContrasenaContent() {
   const searchParams = useSearchParams();
   const correo = searchParams.get('correo') || '';
 
@@ -211,5 +212,13 @@ export default function NuevaContrasenaPage() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export default function NuevaContrasenaPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8">Cargando...</div>}>
+      <NuevaContrasenaContent />
+    </Suspense>
   );
 }
