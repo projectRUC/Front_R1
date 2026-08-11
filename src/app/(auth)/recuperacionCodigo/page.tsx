@@ -11,8 +11,9 @@ import { authService } from '@/services/auth.service';
 // 6 dígitos que se le envió por correo. El código expira a los 5 minutos.
 
 const DURACION_SEGUNDOS = 5 * 60; // 5 minutos
+import { Suspense } from 'react';
 
-export default function VerificarCodigoPage() {
+function VerificarCodigoContent() {
   const searchParams = useSearchParams();
   const correo = searchParams.get('correo') || 'tu correo electrónico';
   const router = useRouter();
@@ -225,5 +226,13 @@ export default function VerificarCodigoPage() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+export default function VerificarCodigoPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8">Cargando...</div>}>
+      <VerificarCodigoContent />
+    </Suspense>
   );
 }
