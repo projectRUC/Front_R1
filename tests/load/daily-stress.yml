@@ -1,0 +1,20 @@
+config:
+  target: "http://localhost/api"
+  phases:
+    - duration: 1
+      arrivalCount: 150
+      name: "Rafaga de dailies"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      # Omitimos la cookie real para esta prueba rápida o usamos un token simulado si la ruta está desprotegida temporalmente
+      # Cookie: "{{ $processEnvironment.AUTH_COOKIE }}"
+scenarios:
+  - name: "Enviar daily"
+    flow:
+      - post:
+          url: "/scrum/daily"
+          json:
+            queHiceAyer: "Avance en el modulo de auth"
+            queHareHoy: "Pruebas de regresion"
+            bloqueos: "Ninguno"
