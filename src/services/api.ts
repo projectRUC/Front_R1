@@ -31,6 +31,8 @@ export async function fetchApi<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   let response: Response;
   try {
@@ -38,6 +40,7 @@ export async function fetchApi<T>(
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...(options.headers || {}),
       },
       credentials: "include",
@@ -92,12 +95,18 @@ export async function fetchApiForm<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
   let response: Response;
   try {
     response = await fetch(url, {
       method: "POST",
       ...options,
+      headers: {
+        ...authHeaders,
+        ...(options.headers || {}),
+      },
       body: formData,
       credentials: "include",
     });

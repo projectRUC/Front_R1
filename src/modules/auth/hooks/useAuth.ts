@@ -47,8 +47,11 @@ export const useAuth = () => {
         throw new Error(errorMsg);
       }
 
-      // La cookie HttpOnly ya fue establecida por el backend
-      // Establecemos una cookie de bandera (flag) que JS SÍ pueda leer para protección del cliente
+      const data = await res.json().catch(() => ({}));
+      if (data?.accessToken && typeof window !== "undefined") {
+        localStorage.setItem("access_token", data.accessToken);
+      }
+
       document.cookie =
         "is_logged_in=true; path=/; max-age=28800; samesite=lax";
 
@@ -83,6 +86,11 @@ export const useAuth = () => {
           errorMsg = errorMsg[0];
         }
         throw new Error(errorMsg);
+      }
+
+      const data = await res.json().catch(() => ({}));
+      if (data?.accessToken && typeof window !== "undefined") {
+        localStorage.setItem("access_token", data.accessToken);
       }
 
       document.cookie =
@@ -135,6 +143,9 @@ export const useAuth = () => {
 
   const logout = async () => {
     setIsLoading(true);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
+    }
     
     // 1. Limpiar cookie local de Next.js
     try {
