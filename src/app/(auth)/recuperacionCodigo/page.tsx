@@ -11,6 +11,7 @@ import { authService } from '@/services/auth.service';
 // 6 dígitos que se le envió por correo. El código expira a los 5 minutos.
 
 const DURACION_SEGUNDOS = 5 * 60; // 5 minutos
+import { Suspense } from 'react';
 
 function VerificarCodigoContent() {
   const searchParams = useSearchParams();

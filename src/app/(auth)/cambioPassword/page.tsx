@@ -11,6 +11,7 @@ import { authService } from '@/services/auth.service';
 // Lee el correo por query param (viene de la pantalla de verificación de código).
 
 const MIN_LARGO = 8;
+import { Suspense } from 'react';
 
 function NuevaContrasenaContent() {
   const searchParams = useSearchParams();
