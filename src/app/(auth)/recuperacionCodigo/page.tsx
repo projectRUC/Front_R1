@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
@@ -12,7 +12,7 @@ import { authService } from '@/services/auth.service';
 
 const DURACION_SEGUNDOS = 5 * 60; // 5 minutos
 
-export default function VerificarCodigoPage() {
+function VerificarCodigoContent() {
   const searchParams = useSearchParams();
   const correo = searchParams.get('correo') || 'tu correo electrónico';
   const router = useRouter();
@@ -225,5 +225,13 @@ export default function VerificarCodigoPage() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+export default function VerificarCodigoPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-gray-500">Cargando...</div>}>
+      <VerificarCodigoContent />
+    </Suspense>
   );
 }

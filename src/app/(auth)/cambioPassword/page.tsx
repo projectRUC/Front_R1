@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -12,7 +12,7 @@ import { authService } from '@/services/auth.service';
 
 const MIN_LARGO = 8;
 
-export default function NuevaContrasenaPage() {
+function NuevaContrasenaContent() {
   const searchParams = useSearchParams();
   const correo = searchParams.get('correo') || '';
 
@@ -211,5 +211,13 @@ export default function NuevaContrasenaPage() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+export default function NuevaContrasenaPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-gray-500">Cargando...</div>}>
+      <NuevaContrasenaContent />
+    </Suspense>
   );
 }
