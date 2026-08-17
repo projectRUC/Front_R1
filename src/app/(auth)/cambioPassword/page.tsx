@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -11,7 +11,6 @@ import { authService } from '@/services/auth.service';
 // Lee el correo por query param (viene de la pantalla de verificación de código).
 
 const MIN_LARGO = 8;
-import { Suspense } from 'react';
 
 function NuevaContrasenaContent() {
   const searchParams = useSearchParams();
@@ -217,7 +216,7 @@ function NuevaContrasenaContent() {
 
 export default function NuevaContrasenaPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center p-8">Cargando...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm text-gray-500">Cargando...</div>}>
       <NuevaContrasenaContent />
     </Suspense>
   );

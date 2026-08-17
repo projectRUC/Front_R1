@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,7 +12,7 @@ export const useAuth = () => {
     setError(null);
     setIsAccountPaused(false);
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      const res = await fetch('/api/auth/login', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,7 +28,6 @@ export const useAuth = () => {
           errorMsg = errorMsg[0];
         }
 
-        // Detección de cuenta pausada / inactiva
         if (
           res.status === 403 ||
           data.error === "ACCOUNT_PAUSED" ||
@@ -47,8 +45,6 @@ export const useAuth = () => {
         throw new Error(errorMsg);
       }
 
-      // La cookie HttpOnly ya fue establecida por el backend
-      // Establecemos una cookie de bandera (flag) que JS SÍ pueda leer para protección del cliente
       document.cookie =
         "is_logged_in=true; path=/; max-age=28800; samesite=lax";
 
@@ -67,7 +63,7 @@ export const useAuth = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/reactivar`, {
+      const res = await fetch('/api/auth/reactivar', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,7 +104,7 @@ export const useAuth = () => {
           correo: userData.correo.trim().toLowerCase(),
         }),
       };
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      const res = await fetch('/api/auth/register', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,18 +132,8 @@ export const useAuth = () => {
   const logout = async () => {
     setIsLoading(true);
     
-    // 1. Limpiar cookie local de Next.js
     try {
       await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-    } catch (err) {
-      console.warn("Advertencia al limpiar cookies en ruta local de Next.js:", err);
-    }
-
-    // 2. Notificar al backend NestJS para limpiar la sesión
-    try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -155,14 +141,11 @@ export const useAuth = () => {
       // Ignorar si el backend no responde
     }
 
-    // 3. Limpiar exhaustivamente cookies en el cliente JS
     document.cookie = "is_logged_in=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
     document.cookie = "access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax";
     document.cookie = "access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict";
 
     setIsLoading(false);
-    
-    // 4. Redirección limpia al login
     window.location.replace("/login");
   };
 

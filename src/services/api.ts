@@ -1,36 +1,22 @@
-
 import axios from 'axios';
 
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
-// BLINDAJE HTTPS
-// Verificamos estrictamente que en producción la URL apunte a un protocolo seguro (HTTPS / TLS 1.3), excepto en entornos locales
-if (
-  process.env.NODE_ENV === 'production' &&
-  !API_BASE_URL.startsWith('https://') &&
-  !API_BASE_URL.includes('localhost') &&
-  !API_BASE_URL.includes('127.0.0.1')
-) {
-    throw new Error("SECURITY POLICY VIOLATION: La variable NEXT_PUBLIC_API_URL debe usar estrictamente HTTPS en producción. El despliegue ha sido abortado por seguridad.");
-}
-
-// Creamos la instancia centralizada para que todo el FrontEnd la use
+// Instancia centralizada para llamadas Axios si se necesitan
 const api = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: '/api',
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true,
 });
 
 export default api;
-
 
 export async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `/api${cleanEndpoint}`;
 
   let response: Response;
   try {
@@ -48,17 +34,12 @@ export async function fetchApi<T>(
       err?.message?.includes("fetch") ||
       err?.name === "TypeError"
     ) {
-      console.warn(
-        `[Servidor Offline] Inaccesible: ${url}. ¿Está corriendo 'npm run start:dev' en Back_R1?`,
-      );
-      throw new Error(
-        "No se pudo contactar con el servidor (API offline). Asegúrate de iniciar Back_R1 en el puerto 4000.",
-      );
+      console.warn(`[Servidor Inaccesible]: ${url}`);
+      throw new Error("No se pudo contactar con el servidor. Verifica tu conexión.");
     }
     throw err;
   }
 
-  // Leemos el cuerpo como texto plano primero para evitar crash en respuestas vacías
   const text = await response.text();
 
   if (!response.ok) {
@@ -76,28 +57,25 @@ export async function fetchApi<T>(
     throw new Error(errorMessage);
   }
 
-  // Si la respuesta está vacía (status 204 o retorno null), devuelve null sin fallar
   return text ? JSON.parse(text) : (null as unknown as T);
 }
 
-/**
- * Variante para envíos multipart/form-data (subida de archivos).
- * NO se fija Content-Type manualmente: el navegador debe generar el boundary
- * automáticamente al ver que el body es un FormData. Si forzamos
- * "application/json" aquí, el backend (Multer) no podrá parsear los archivos.
- */
 export async function fetchApiForm<T>(
   endpoint: string,
   formData: FormData,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `/api${cleanEndpoint}`;
 
   let response: Response;
   try {
     response = await fetch(url, {
       method: "POST",
       ...options,
+      headers: {
+        ...(options.headers || {}),
+      },
       body: formData,
       credentials: "include",
     });
@@ -107,12 +85,8 @@ export async function fetchApiForm<T>(
       err?.message?.includes("fetch") ||
       err?.name === "TypeError"
     ) {
-      console.warn(
-        `[Servidor Offline] Inaccesible: ${url}. ¿Está corriendo 'npm run start:dev' en Back_R1?`,
-      );
-      throw new Error(
-        "No se pudo contactar con el servidor (API offline). Asegúrate de iniciar Back_R1 en el puerto 4000.",
-      );
+      console.warn(`[Servidor Inaccesible]: ${url}`);
+      throw new Error("No se pudo contactar con el servidor. Verifica tu conexión.");
     }
     throw err;
   }
@@ -136,4 +110,3 @@ export async function fetchApiForm<T>(
 
   return text ? JSON.parse(text) : (null as unknown as T);
 }
-

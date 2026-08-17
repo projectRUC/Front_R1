@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent } from '@heroui/react';
 import Link from 'next/link';
@@ -11,7 +11,6 @@ import { authService } from '@/services/auth.service';
 // 6 dígitos que se le envió por correo. El código expira a los 5 minutos.
 
 const DURACION_SEGUNDOS = 5 * 60; // 5 minutos
-import { Suspense } from 'react';
 
 function VerificarCodigoContent() {
   const searchParams = useSearchParams();
@@ -231,7 +230,7 @@ function VerificarCodigoContent() {
 
 export default function VerificarCodigoPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center p-8">Cargando...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm text-gray-500">Cargando...</div>}>
       <VerificarCodigoContent />
     </Suspense>
   );
