@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { SprintDesign } from "@/types/designSprint";
-import { DesignSprintService } from "../services/designSprintApi";
+import { DesignSprintService, extraerId } from "../services/designSprintApi";
 
 export type FaseKey = "mapeo" | "boceto" | "decidir" | "prototipo" | "test";
 
@@ -17,8 +17,8 @@ export function useDesignSprint(sprintId: string) {
   const [error, setError] = useState<string | null>(null);
 
   // Obtener el ID objetivo (Prioriza la _id de MongoDB del sprint cargado si existe)
-  const targetId = sprint?._id || (sprint as any)?.id || sprintId;
-
+  const targetId = extraerId(sprint?._id) || extraerId((sprint as any)?.id) || sprintId;
+  
   const cargarSprint = useCallback(async () => {
     if (!sprintId) return;
     try {

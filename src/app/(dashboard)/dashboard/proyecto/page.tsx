@@ -893,14 +893,34 @@ function ProyectoDetalleContent() {
           </motion.div>
         )}
 
-{activeTab === 'design_sprint' && (
-  <DesignSprintGate
-    eqId={Number(equipoId)}
-    proyectoId={Number(proyecto.id)}
-    usuId={user?.id ?? 0}
-    esDocente={user?.rol === 'Docente'}
-  />
-)}
+        {activeTab === 'design_sprint' && (
+          <motion.div
+            key="tab-design-sprint"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {proyecto.mongoId ? (
+              <DesignSprintGate
+                eqId={Number(equipoId)}
+                proyectoId={proyecto.mongoId}
+                usuId={user?.id ?? 0}
+                esDocente={user?.rol === 'Docente'}
+              />
+            ) : (
+              <div className="p-12 text-center bg-white dark:bg-zinc-900/60 rounded-3xl border border-dashed border-gray-300 dark:border-zinc-800">
+                <p className="text-sm font-bold text-gray-700 dark:text-zinc-300">
+                  Este proyecto no tiene un documento asociado en MongoDB
+                </p>
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
+                  El Design Sprint requiere que el proyecto exista en la base documental. Verifica que el
+                  proyecto se haya creado desde &quot;Crear Proyecto y Equipo&quot;.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {activeTab === 'actividades' && (
           <motion.div
