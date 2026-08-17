@@ -7,7 +7,7 @@ import { ImageBase64Uploader } from "./components/FileUploader";
 import { EvidenceCard } from "./components/EvidenceCard";
 import { DecidirPhase } from "./components/DecidirPhase";
 import { RetroalimentacionDocente } from "./components/RetroalimentacionDocente";
-import { DesignSprintService } from "./services/designSprintApi";
+import { DesignSprintService, extraerId } from "./services/designSprintApi";
 import { PitchCoachAnalysis, FileEntity } from "@/types/designSprint";
 
 interface Props {
@@ -63,9 +63,8 @@ export default function DesignSprintPage({
   const [cargandoIa, setCargandoIa] = useState(false);
   const [errorIa, setErrorIa] = useState<string | null>(null);
 
-  // Determinar la ID verdadera del backend (MongoDB _id)
-  const targetId = sprint?._id || (sprint as any)?.id || sprintId;
-
+// Determinar la ID verdadera del backend (MongoDB _id)
+  const targetId = extraerId(sprint?._id) || extraerId((sprint as any)?.id) || sprintId;
   useEffect(() => {
     if (!sprint) return;
 
@@ -375,8 +374,8 @@ export default function DesignSprintPage({
                 )}
                 onGuardarComentario={async (comentario) => {
                   const bocetoId =
-                    (sprint.bocetos?.[0] as any)?._id ||
-                    (sprint.bocetos?.[0] as any)?.id;
+                    extraerId((sprint.bocetos?.[0] as any)?._id) ||
+                    extraerId((sprint.bocetos?.[0] as any)?.id);
                   if (!bocetoId) {
                     alert(
                       "No hay un boceto registrado al cual asignarle la retroalimentación."

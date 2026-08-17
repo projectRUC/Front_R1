@@ -1,17 +1,22 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { DesignSprintService } from "./services/designSprintApi";
+import { DesignSprintService, extraerId } from "./services/designSprintApi";
 import DesignSprintPage from "./page";
 
 interface Props {
   eqId: number;
-  proyectoId: number;
+  proyectoId: string;
   usuId: number;
   esDocente?: boolean;
 }
 
-export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = false }: Props) {
+export default function DesignSprintGate({
+  eqId,
+  proyectoId,
+  usuId,
+  esDocente = false,
+}: Props) {
   const [sprintId, setSprintId] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(true);
   const [creando, setCreando] = useState(false);
@@ -22,22 +27,22 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = 
     setBuscando(true);
     setError(null);
     setNoExiste(false);
-    try {
-      const sprint = await DesignSprintService.obtenerPorEquipoYProyecto(
-        eqId,
-        String(proyectoId)
-      );
 
-      if (sprint && sprint._id) {
-        setSprintId(sprint._id);
+    try {
+      const sprint = await DesignSprintService.obtenerPorEquipoYProyecto(eqId, proyectoId);
+      const idEncontrado = extraerId(sprint?._id);
+
+      if (idEncontrado) {
+        setSprintId(idEncontrado);
       } else {
         setNoExiste(true);
       }
     } catch (e: any) {
-      if (e.message?.toLowerCase().includes("no encontrado")) {
+      const msg = (e?.message || "").toLowerCase();
+      if (msg.includes("no encontrado")) {
         setNoExiste(true);
       } else {
-        setError(e.message);
+        setError(e?.message || "Error al consultar el ciclo de ideación.");
       }
     } finally {
       setBuscando(false);
@@ -51,16 +56,19 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = 
   const handleCrear = async () => {
     setCreando(true);
     setError(null);
+
     try {
-      const nuevo = await DesignSprintService.crear(eqId, String(proyectoId));
-      if (nuevo && nuevo._id) {
-        setSprintId(nuevo._id);
+      const nuevo = await DesignSprintService.crear(eqId, proyectoId);
+      const idNuevo = extraerId(nuevo?._id);
+
+      if (idNuevo) {
+        setSprintId(idNuevo);
         setNoExiste(false);
       } else {
         throw new Error("No se pudo obtener el ID del nuevo ciclo de ideación.");
       }
     } catch (e: any) {
-      setError(e.message);
+      setError(e?.message || "Error al crear el ciclo de ideación.");
     } finally {
       setCreando(false);
     }
@@ -68,7 +76,7 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = 
 
   if (buscando) {
     return (
-      <p className="text-sm text-gray-500 p-6">
+      <p className="text-sm text-gray-500 dark:text-zinc-400 p-6">
         Buscando ciclo de ideación del equipo...
       </p>
     );
@@ -77,10 +85,10 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = 
   if (error) {
     return (
       <div className="p-6">
-        <p className="text-sm text-red-600 mb-3">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
         <button
           onClick={buscar}
-          className="border rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+          className="border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-zinc-800 transition"
         >
           Reintentar
         </button>
@@ -91,8 +99,10 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = 
   if (noExiste) {
     return (
       <div className="max-w-md mx-auto p-6 text-center">
-        <h2 className="font-semibold text-lg mb-2">Aún no hay un ciclo de ideación</h2>
-        <p className="text-sm text-gray-500 mb-4">
+        <h2 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
+          Aún no hay un ciclo de ideación
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-zinc-400 mb-4">
           Este equipo todavía no ha iniciado el Design Sprint para este proyecto.
         </p>
         <button
@@ -108,7 +118,7 @@ export default function DesignSprintGate({ eqId, proyectoId, usuId, esDocente = 
 
   if (!sprintId) {
     return (
-      <p className="text-sm text-gray-500 p-6">
+      <p className="text-sm text-gray-500 dark:text-zinc-400 p-6">
         No se pudo determinar el ciclo de ideación.
       </p>
     );

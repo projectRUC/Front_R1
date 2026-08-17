@@ -7,7 +7,6 @@ export interface UpdateVoBoData {
   comentarios_viabilidad?: string;
   dictamen?: string;
   vobo_docente?: boolean;
-  // Propiedades opcionales por si el formulario de React las pasa en camelCase
   nombreExperto?: string;
   profesionInstitucion?: string;
   comentariosViabilidad?: string;
@@ -21,6 +20,26 @@ export interface PitchCoachResponse {
   sugerencias_pitch?: string[];
   [key: string]: any;
 }
+
+/**
+ * Extrae de forma segura un ID en formato string.
+ * Protege contra ObjectId serializados como objeto, evitando URLs con "[object Object]".
+ */
+export const extraerId = (valor: any): string => {
+  if (!valor) return "";
+  if (typeof valor === "string") return valor;
+  if (typeof valor === "number") return String(valor);
+  if (typeof valor === "object") {
+    if (valor.$oid) return String(valor.$oid);
+    if (typeof valor.toString === "function") {
+      const s = valor.toString();
+      if (s && s !== "[object Object]") return s;
+    }
+    if (valor._id) return extraerId(valor._id);
+    if (valor.id) return extraerId(valor.id);
+  }
+  return "";
+};
 
 export const DesignSprintService = {
   crear: (eq_id: number, proyecto_id: string) =>
@@ -110,19 +129,14 @@ export const DesignSprintService = {
   // ---------- VALIDACIÓN Y VOBO (Viernes) ----------
 
   actualizarVoBo: (id: string, data: UpdateVoBoData) => {
-    // 1. Obtenemos el valor ya sea que venga en snake_case o en camelCase desde la vista
     const nombreExperto = data.nombre_experto ?? data.nombreExperto;
     const profesionInstitucion = data.profesion_institucion ?? data.profesionInstitucion;
     const comentariosViabilidad = data.comentarios_viabilidad ?? data.comentariosViabilidad;
     const dictamen = data.dictamen;
     const voboDocente = data.vobo_docente ?? data.voboDocente;
 
-    
-
-    // 2. Construimos la estructura exacta del UpdateVoBoDto de NestJS
     const dtoPayload: Record<string, any> = {};
-console.log("ID:", id);
-console.log("Payload:", dtoPayload);
+
     if (nombreExperto !== undefined && nombreExperto !== null) {
       dtoPayload.nombre_experto = String(nombreExperto);
     }
@@ -138,6 +152,9 @@ console.log("Payload:", dtoPayload);
     if (voboDocente !== undefined && voboDocente !== null) {
       dtoPayload.vobo_docente = Boolean(voboDocente);
     }
+
+    console.log("ID:", id);
+    console.log("Payload:", dtoPayload);
 
     return fetchApi<SprintDesign>(`/design-sprint/${id}/vobo`, {
       method: "PATCH",
